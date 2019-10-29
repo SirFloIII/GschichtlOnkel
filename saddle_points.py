@@ -140,12 +140,17 @@ def find_critical(a, neigh, tol):
     #local quadratic regression on the data
     coeff = local_regression(a, neigh, 2)
     print("Regression done.")
+
+    #remember indices where critical points occur
+    indices_of = {"min":[],
+                  "max":[],
+                  "degen":[],
+                  "ridge":[],
+                  "valley":[],
+                  "saddle":[]}
     
     #for writing the coefficients of quadratic terms into a matrix
     tri_u_indices = np.triu_indices(n)
-
-    #remember indices where critical points occur
-    min_idx, max_idx, ridge_idx, valley_idx, saddle_idx = [[]]*5
 
     it = np.nditer(coeff[...,0], flags=['multi_index'])
     while not it.finished:
@@ -162,25 +167,22 @@ def find_critical(a, neigh, tol):
         #the critical point is only of interest if it's in the innermost cube
         if np.all(neigh/2-1<crit+tol) and np.all(crit<neigh/2+tol):
             eigvals = np.linalg.eig(hessian)[0]
-            if   np.all(eigvals>tol):           min_idx += [center_idx]
-            elif np.all(eigvals<-tol):          max_idx += [center_idx]
-            elif np.all(np.abs(eigvals)<tol):   pass #zero matrix
-            elif np.all(eigvals<tol):           ridge_idx += [center_idx]
-            elif np.all(eigvals>-tol):          valley_idx += [center_idx]
-            else:                               saddle_idx += [center_idx]
+            if   np.all(eigvals>tol):       indices_of["min"] += [center_idx]
+            elif np.all(eigvals<-tol):      indices_of["max"] += [center_idx]
+            elif np.all(np.abs(eigvals)<tol):indices_of["degen"] += [center_idx]
+            elif np.all(eigvals<tol):       indices_of["ridge"] += [center_idx]
+            elif np.all(eigvals>-tol):      indices_of["valley"] += [center_idx]
+            else:                           indices_of["saddle"] += [center_idx]
         it.iternext()
         
     print("Found",
-          len(min_idx), "minima,",
-          len(max_idx), "maxima,",
-          len(ridge_idx), "ridge points,",
-          len(valley_idx), "valley points and",
-          len(saddle_idx), "saddle points.")
-    return {"indices of minima":min_idx,
-            "indices of maxima":max_idx,
-            "indices of ridges":ridge_idx,
-            "indices of valleys":valley_idx,
-            "indices of saddles":saddle_idx}
+          len(indices_of["min"]), "minima,",
+          len(indices_of["max"]), "maxima,",
+          len(indices_of["degen"]), "degenerate points,",
+          len(indices_of["ridge"]), "ridge points,",
+          len(indices_of["valley"]), "valley points and",
+          len(indices_of["saddle"]), "saddle points.")
+    return indices_of
 
-a=find_critical(data, 4, 0.001)
+a=find_critical(data, 2, 0.0)
 #plt.show()
