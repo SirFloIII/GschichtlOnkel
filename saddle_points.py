@@ -162,7 +162,11 @@ def find_critical(a, neigh, tol):
         hessian = (hessian+hessian.T)/2
         
         #look at where the quadratic function has its critical point
-        crit = np.linalg.solve(hessian, -linear_c/2)
+        try:
+            crit = np.linalg.solve(hessian, -linear_c/2)
+        except np.linalg.LinAlgError:
+            indices_of["degen"] += [center_idx]
+            crit = np.inf #so we skip the if block below
         
         #the critical point is only of interest if it's in the innermost cube
         if np.all(neigh/2-1<crit+tol) and np.all(crit<neigh/2+tol):
@@ -184,5 +188,5 @@ def find_critical(a, neigh, tol):
           len(indices_of["saddle"]), "saddle points.")
     return indices_of
 
-a=find_critical(data, 2, 0.0)
+a=find_critical(data, 4, 0.0)
 #plt.show()
