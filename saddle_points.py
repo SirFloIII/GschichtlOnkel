@@ -1,20 +1,16 @@
 import numpy as np
-import copy
+from copy import copy
 from PIL import Image
 from numba import jit, njit, types
 from numba.typed import Dict
 import matplotlib.pyplot as plt
+from matplotlib import cm
 ##import matplotlib.ticker as ticker
 ##import matplotlib.patches as patches
 ##import matplotlib.animation as animation
+from mpl_toolkits.mplot3d import Axes3D
 
 
-pic = Image.open("kleineNarzisse.jpg")
-##data = np.array(pic)[100:200, 150:300 ,1]
-data = np.array(pic)[...,1]
-##data = data/data.max()
-#data = np.round(100*np.random.rand(100,100)).astype(np.int)
-##data = np.array(range(4*5*6)).reshape((4,5,6))
 
 #this is so we can convert back and forth in number bases up to base 36
 #create an empty, typed dict for numba
@@ -146,6 +142,7 @@ def local_regression(a, neigh=2, deg=1, weights=None):
     An array s-1 shorter than a in every dimension, but with one additional dimension of length a.ndim+1, which contains the regression coefficients.
     
     """
+    assert np.all( np.array(a.shape) >= neigh )#long enough in each dim
 
     #get the matrix that locally solves regression
     R, index_array = regression_matrix(a.ndim, neigh, deg, weights)
@@ -153,7 +150,7 @@ def local_regression(a, neigh=2, deg=1, weights=None):
     #the coefficients for regression will be stored in
     #an array neigh-1 shorter than data in every dimension, but
     #with an additional dimension to store all coefficients in.
-    result_shape = tuple( [k+1-neigh for k in data.shape] + [R.shape[0]] )
+    result_shape = tuple( [k+1-neigh for k in a.shape] + [R.shape[0]] )
     result = np.zeros(result_shape)
 
     #perform regression in all cubes with length s
@@ -170,7 +167,7 @@ def local_regression(a, neigh=2, deg=1, weights=None):
 
 
 #@njit(parallel=True)
-def find_critical(a, neigh, tol, rim):
+def find_critical(a, neigh, tol=1E-3, rim=0):
     """
     Find and classify critical points in the voxels of multidimensional data. Local quadratic regression is used.
     
@@ -212,7 +209,7 @@ def find_critical(a, neigh, tol, rim):
     it = np.nditer(coeff[...,0], flags=['multi_index'])
     while not it.finished:
         #the index of the vertex in the center cube with lowest indices
-        center_idx = np.array(it.multi_index) + neigh/2-1
+        center_idx = np.array(it.multi_index, dtype=np.int) + neigh//2-1
         vec = coeff[it.multi_index]
         linear_c = vec[1:1+n]
         hessian = np.zeros((n,n))
@@ -226,10 +223,14 @@ def find_critical(a, neigh, tol, rim):
 ##            indices_of["degen"] += [center_idx]
 ##            crit = np.inf #so we skip the if block below
         crit = np.linalg.solve(hessian, -linear_c/2)
+##        print("cube at" ,np.array(it.multi_index, dtype=np.int),
+##              "with center at", center_idx,
+##              "has crit at:", it.multi_index+np.round(crit, 1))
         
         #the critical point is only of interest if in the innermost cube
         if np.all(neigh/2-1<crit+rim) and np.all(crit<neigh/2+rim):
             eigvals = np.linalg.eig(hessian)[0]
+            #print(eigvals)
             if   np.all(eigvals>tol):       indices_of["min"] += [center_idx]
             elif np.all(eigvals<-tol):      indices_of["max"] += [center_idx]
             elif np.all(np.abs(eigvals)<tol):indices_of["degen"] += [center_idx]
@@ -254,35 +255,57 @@ def find_critical(a, neigh, tol, rim):
         
     return indices_of
 
-a=find_critical(data, 6, 0.0, 0.0)
-#a={}
+#generate data
+k=1/16
+r = np.arange(-3, 3, k)
+x, y = np.meshgrid(r, r)
+f = -np.sin(x*y)+np.cos(x**2+y**2) + np.random.rand(x.shape[0], x.shape[1])/10
 
-crits = copy.copy(data)/3 + 255/3
-saddles = copy.copy(crits)
-other = copy.copy(crits)
-if a["max"]: crits[a["max"]] = 255
-if a["min"]: crits[a["min"]] = 0
-if a["saddle"]:saddles[a["saddle"]] = 255
-if a["degen"]: other[a["degen"]] = 255
-if a["valley"]: other[a["valley"]] = 0
-if a["ridge"]: other[a["ridge"]] = 255
+#print to CLI how many critical points we found
+#d = find_critical(f, 6, tol=0, rim=0)
+##for p in d:
+##    if d[p]: print(p, d[p])
 
-plt.subplot(2, 2, 1)
-plt.imshow(data, cmap='gray', vmin=0, vmax=255)
-plt.xlabel("original data")
+#3D plot
+def plot(x,y,f, n, tol, rim):
+    fig = plt.figure()
+    ax = fig.gca(projection='3d')
+    plt.subplots_adjust(top = 1,
+                        bottom = 0,
+                        right = 1,
+                        left = 0,
+                        hspace = 0,
+                        wspace = 0)
+    plt.margins(x=0, y=0)
 
-plt.subplot(2, 2, 2)
-plt.imshow(crits, cmap='gray', vmin=0, vmax=255)
-plt.xlabel("minima and maxima")
+    ax.plot_wireframe(x,y,f,
+                      colors="k",
+                      linewidths=0.1)
 
-plt.subplot(2, 2, 3)
-plt.imshow(saddles, cmap='gray', vmin=0, vmax=255)
-plt.xlabel("saddle points")
+    col = {"max": "r",
+           "min": "b",
+           "saddle": "k",
+           "degen": "0.5",#gray
+           "valley": "g",
+           "ridge": "m"}
+    
+    d = find_critical(f, n, tol=tol, rim=rim)
+    
+    for p in d:
+        if d[p]: ax.scatter(r[d[p][0]]+k/2,
+                            r[d[p][1]]+k/2,
+                            f[d[p]],
+                            zdir="z",
+                            zorder=1,
+                            s=15,
+                            c=col[p],
+                            depthshade=False)
 
-plt.subplot(2, 2, 4)
-plt.imshow(other, cmap='gray', vmin=0, vmax=255)
-plt.xlabel("other critical points")
+    plt.show()
+    
+plot(x, y, f, 6, 1E-3, 0)
 
-#TODO: 3D plot of 2D data, marking critical points
-
-plt.show()
+#pic = Image.open("kleineNarzisse.jpg")
+##data = np.array(pic)[100:200, 150:300 ,1]
+#data = np.array(pic)[...,1]
+#plt.imshow(data)
