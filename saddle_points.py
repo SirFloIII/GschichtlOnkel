@@ -311,18 +311,21 @@ def plot(x,y,f, n, tol, rim):
 
     plt.show()
 
-#plot(x, y, f, 6, 1E-3, 0)
 
-pic = Image.open("narzisse.jpg")
-data = np.array(pic)[100:250, 150:300, 1]
-###data = np.array(pic)[...,1]
-plt.imshow(data)
-x = range(data.shape[0])
-y = range(data.shape[1])
-##x=(np.arange(17)-8)/4
-x, y= np.meshgrid(x, x)
-##d=x**2+y**2+z**2
-x = x.T
-y = y.T
-plot(x, y, data, 6, 1E-3, 0)
-
+if __name__ == "__main__":
+    
+    #plot(x, y, f, 6, 1E-3, 0)
+    
+    pic = Image.open("narzisse.jpg")
+    data = np.array(pic)[100:250, 150:300, 1]
+    ###data = np.array(pic)[...,1]
+    plt.imshow(data)
+    x = range(data.shape[0])
+    y = range(data.shape[1])
+    ##x=(np.arange(17)-8)/4
+    x, y= np.meshgrid(x, x)
+    ##d=x**2+y**2+z**2
+    x = x.T
+    y = y.T
+    plot(x, y, data, 6, 1E-3, 0)
+    
