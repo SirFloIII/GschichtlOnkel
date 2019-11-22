@@ -275,7 +275,7 @@ f = -np.sin(x*y)+np.cos(x**2+y**2) + np.random.rand(x.shape[0], x.shape[1])/4
 ##    if d[p]: print(p, d[p])
 
 #3D plot
-def plot(x,y,f, n, tol, rim):
+def plot(f, n, tol=1E-3, rim=1E-3):
     fig = plt.figure()
     ax = fig.gca(projection='3d')
     plt.subplots_adjust(top = 1,
@@ -286,7 +286,11 @@ def plot(x,y,f, n, tol, rim):
                         wspace = 0)
     plt.margins(x=0, y=0)
 
-    ax.plot_wireframe(x,y,f,
+
+    x = range(f.shape[0])
+    y = range(f.shape[1])
+    x, y = np.meshgrid(x, x)
+    ax.plot_wireframe(x.T, y.T, f,
                       colors="k",
                       linewidths=0.1)
 
@@ -311,18 +315,15 @@ def plot(x,y,f, n, tol, rim):
 
     plt.show()
 
-#plot(x, y, f, 6, 1E-3, 0)
 
 pic = Image.open("narzisse.jpg")
 data = np.array(pic)[100:250, 150:300, 1]
-###data = np.array(pic)[...,1]
 plt.imshow(data)
-x = range(data.shape[0])
-y = range(data.shape[1])
+plot(data, 6, 1E-3, 0)
+
+
 ##x=(np.arange(17)-8)/4
-x, y= np.meshgrid(x, x)
+##x, y, z = np.meshgrid(x, x, x)
 ##d=x**2+y**2+z**2
-x = x.T
-y = y.T
-plot(x, y, data, 6, 1E-3, 0)
+##a = find_critical(d, 4)
 
