@@ -225,12 +225,12 @@ def find_critical(a, neigh, tol=1E-3, rim=1E-3):
         hessian = (hessian+hessian.T)/2
 
         #look at where the quadratic function has its critical point
-##        try:
-##            crit = np.linalg.solve(hessian, -linear_c/2)
-##        except np.linalg.LinAlgError:
-##            indices_of["degen"] += [center_idx]
-##            crit = np.inf #so we skip the if block below
-        crit = np.linalg.solve(hessian, -linear_c/2)
+        try:
+            crit = np.linalg.solve(hessian, -linear_c/2)
+        except np.linalg.LinAlgError:
+            indices_of["degen"] += [center_idx]
+            crit = np.inf #so we skip the if block below
+#        crit = np.linalg.solve(hessian, -linear_c/2)
 ##        print("cube at" ,np.array(it.multi_index, dtype=np.int),
 ##              "with center at", center_idx,
 ##              "has crit at:", it.multi_index+np.round(crit, 1))
