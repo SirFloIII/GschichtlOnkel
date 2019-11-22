@@ -284,7 +284,7 @@ def plot(f, n, tol=1E-3, rim=1E-3):
                         left = 0,
                         hspace = 0,
                         wspace = 0)
-    plt.margins(x=0, y=0)
+    plt.tight_layout()
 
 
     x = range(f.shape[0])
