@@ -319,7 +319,7 @@ def plot(f, n, tol=1E-3, rim=1E-3):
 pic = Image.open("narzisse.jpg")
 data = np.array(pic)[100:250, 150:300, 1]
 plt.imshow(data)
-plot(data, 6, 1E-3, 0)
+plot(data, 6, 1E-3, 0.0)
 
 
 ##x=(np.arange(17)-8)/4
