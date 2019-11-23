@@ -1,66 +1,138 @@
 import numpy as np
 
-
 class Region:
-    max_idx = None
-    min_idx = None
-    sad_idx = None
-    points = set()  #inner points
-    edge = set()    #border, belonging to the region
-    halo = set()    #border, not (yet) part of the region
+
+    def __init__(self, point, array):
+        self.array_shape = array.shape
+        self.min_idx = point
+        self.active = True
+        self.points = set()#points, both inner and on the edge
+        self.edge = set()#border, belonging to the region
+        self.halo = set()#border, not (yet) part of the region
+        self.add(point)
+
+    def __repr__(self):
+        return str(self.points)
+
+    #get points with index varying at most by 1 in every dimension
+    def get_cube(self, point):
+        idx = np.array(point)
+        low_corner = idx-1
+        low_corner[low_corner<0] = 0
+        high_corner = np.minimum(idx+1, np.array(self.array_shape)-1)
+        offsets = [np.array(i)
+                   for i in np.ndindex(tuple(high_corner+1-low_corner))]
+        return {tuple(low_corner+o) for o in offsets}
+
+    #get points that are directly adjacent along the axes
+    def get_neigh(self, point):
+        neigh = set()
+        for dim, len in enumerate(self.array_shape):
+            pos = point[dim]
+            for k in [max(0, pos-1), pos, min(len-1, pos+1)]:
+                new_idx = tuple(p if i!=dim else k for i,p in enumerate(point)) 
+                neigh.add(new_idx)
+        return neigh
 
     def add(self, point):
-        #TODO test for min and saddle, handle them, update edge, points & halo
-        pass
+        assert point not in self.points
+        assert point in self.halo or not self.points
+
+        neigh = self.get_neigh(point)
+        self.points.add(point)
+
+        new_halo = neigh.difference(self.points)
+
+        self.halo.update(new_halo)
+        self.halo.discard(point)
+
+        self.edge.add(point)
+        for ed in neigh.intersection(self.edge):
+            if self.get_neigh(ed).issubset(self.points):
+                #we found a maximum
+                self.edge.remove(ed)
+                self.max_idx = point
+                self.passivate()
 
     def get_edge(self):
-        return edge
+        return self.edge
 
     def get_halo(self):
-        return halo
+        return self.halo
 
     def remove_from_halo(self, points):
         #TODO
         pass
+
+    def set_saddle(self, point):
+        self.sad_idx = point
+        self.passivate()
+
+    def passivate(self):
+        self.active = False
 
 
 active_regions = []
 passive_regions = []
 
 #dummy data for debug
-d = np.round(10*np.random.rand(4,4)).astype(np.int)
+d = np.round(10*np.random.rand(5,5)).astype(np.int)
 
 #sort indices for increasing array value
 sorted_idx = np.unravel_index(d.argsort(axis=None), d.shape)
 
 #create empty levelsets for each value that occurs
-levelsets = {val : set() for val in d[sorted_idx]}
+levelset = {val : set() for val in d[sorted_idx]}
 
 #then fill in the indices
 for idx in np.array(sorted_idx).T:
-    levelsets[d[tuple(idx)]].add(tuple(idx))
+    levelset[d[tuple(idx)]].add(tuple(idx))
 
-for level in levelsets:
+for level, points in levelset.items():
+    #remember which points we add to any region
     added_points = set()
+
+    #first off, deal with points that can be assigned to existing regions
     for region in active_regions:
-        points_left = True
-        while points_left:
-            active_points = intersection(region.get_halo(), levelsets[level])
-            points_left = active_points==set()
+        active_points = points.intersection(region.get_halo())
+        
+        while active_points and region.active:
+            for point in active_points:
+                if point in added_points:
+                    #regions meet, we found a saddle. stop this region now.
+                    region.set_saddle(point)
+                else:
+                    region.add(point)
+                    added_points.add(point)
+
+            active_points = points.intersection(region.get_halo())
+            
+        if not region.active:
+            passive_regions.append(region)
+            active_regions.remove(region)
+
+    #then look at remaining points and create new regions as necessary
+    new_regions = []
+    remaining_points = points.difference(added_points)
+    while remaining_points:
+        point = remaining_points.pop()
+        region = Region(point, d)
+        added_points.add(point)
+        new_regions += [region]
+
+        #now fill the new region as much as possible
+        keep_going = True
+        while keep_going:
+            active_points = remaining_points.intersection(region.get_halo())
             for point in active_points:
                 #TODO test for special points and act accordingly
                 region.add(point)
                 added_points.add(point)
-                active_points.remove(point)
-
-    new_regions = []
-    remaining_points = difference(levelsets[level], added_points)
-    while not remaining_points==set():
-        region = Region()
-        new_regions += [region]
-        for point in remaining_points:
-            #TODO test for special points and act accordingly
-            region.add(point)
-            added_points.add(point)
-        remaining_points = difference(levelsets[level], added_points)
+            keep_going = active_points  #eventually this becomes empty
+            
+        #and update which points are left now
+        remaining_points = points.difference(added_points)
+        
     active_regions += new_regions
+
+a=active_regions[0]
