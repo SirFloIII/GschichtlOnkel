@@ -1,10 +1,14 @@
 import numpy as np
+import matplotlib.pyplot as plt
+from mpl_toolkits.mplot3d import Axes3D
 
 class Region:
 
     def __init__(self, point, array):
         self.array_shape = array.shape
         self.min_idx = point
+        self.max_idx = None
+        self.sad_idx = None
         self.active = True
         self.points = set()#points, both inner and on the edge
         self.edge = set()#border, belonging to the region
@@ -76,7 +80,7 @@ active_regions = []
 passive_regions = []
 
 #dummy data for debug
-d = np.round(10*np.random.rand(5,5)).astype(np.int)
+d = np.round(10*np.random.rand(6,6)).astype(np.int)
 
 #sort indices for increasing array value
 sorted_idx = np.unravel_index(d.argsort(axis=None), d.shape)
@@ -135,4 +139,29 @@ for level, points in levelset.items():
         
     active_regions += new_regions
 
-a=active_regions[0]
+#plot 2D array in 3D projection
+fig = plt.figure()
+ax = fig.gca(projection='3d')
+plt.subplots_adjust(top = 1,
+                    bottom = 0,
+                    right = 1,
+                    left = 0,
+                    hspace = 0,
+                    wspace = 0)
+plt.tight_layout()
+x = range(d.shape[0])
+y = range(d.shape[1])
+x, y = np.meshgrid(x, x)
+ax.plot_wireframe(x.T, y.T, d,
+                  colors="k",
+                  linewidths=0.2,
+                  zorder=1)
+colors = ["b", "r", "k", "c", "g", "y", "m"]
+markers = ["o", "x", "s", "+", "*"]
+for k, region in enumerate(active_regions+passive_regions):
+    xs = [p[0] for p in region.points]
+    ys = [p[1] for p in region.points]
+    zs = [d[p] for p in region.points]
+    ax.scatter(xs, ys, zs, zdir="z", zorder=1,
+               s=35, c=colors[k%7], marker=markers[k%5], depthshade=False)
+plt.show()
