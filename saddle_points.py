@@ -263,16 +263,6 @@ def find_critical(a, neigh, tol=1E-3, rim=1E-3):
 
     return indices_of
 
-#generate data
-k=1/8
-r = np.arange(-3, 3, k)
-x, y = np.meshgrid(r, r)
-f = -np.sin(x*y)+np.cos(x**2+y**2) + np.random.rand(x.shape[0], x.shape[1])/4
-
-#print to CLI how many critical points we found
-#d = find_critical(f, 6, tol=0, rim=0)
-##for p in d:
-##    if d[p]: print(p, d[p])
 
 #3D plot
 def plot(f, n, tol=1E-3, rim=1E-3):
@@ -300,17 +290,25 @@ def plot(f, n, tol=1E-3, rim=1E-3):
            "degen": "0.5",#gray
            "valley": "g",
            "ridge": "m"}
+    mrk = {"max": "^",
+           "min": "v",
+           "saddle": "x",
+           "degen": "_",
+           "valley": ".",
+           "ridge": "."}
     
     d = find_critical(f, n, tol=tol, rim=rim)
 
+    step = 1/8
     for p in d:
-        if d[p]: ax.scatter(d[p][0]+k/2,
-                            d[p][1]+k/2,
+        if d[p]: ax.scatter(d[p][0],#+step/2,
+                            d[p][1],#+step/2,
                             f[d[p]],
                             zdir="z",
                             zorder=1,
                             s=15,
                             c=col[p],
+                            marker=mrk[p],
                             depthshade=False)
 
     plt.show()
@@ -319,10 +317,17 @@ if __name__ == "__main__":
 
     pic = Image.open("narzisse.jpg")
     data = np.array(pic)[100:250, 150:300, 1]
-    plt.imshow(data)
-    plot(data, 6, 1E-3, 0.0)
-    
-    
+    #plt.imshow(data)
+    #plot(data, 6, 1E-3, 0.0)
+        
+    #generate data
+    k=1/8
+    r = np.arange(-3, 3, k)
+    x, y = np.meshgrid(r, r)
+    f = -np.sin(x*y)+np.cos(x**2+y**2) +\
+        np.random.rand(x.shape[0], x.shape[1])/8
+    plot(f, 6)
+        
     ##x=(np.arange(17)-8)/4
     ##x, y, z = np.meshgrid(x, x, x)
     ##d=x**2+y**2+z**2
