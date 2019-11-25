@@ -3,13 +3,14 @@ import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
 from PIL import Image
 
+
 class Region:
 
     def __init__(self, point, array):
         self.array_shape = array.shape
         self.min_idx = point
         self.max_idx = None
-        self.sad_idx = None
+        self.sad_idx = None #needn't be a point in the region!
         self.active = True
         self.points = set() #points, both inner and on the edge
         self.edge = set()   #border, belonging to the region
@@ -19,17 +20,26 @@ class Region:
     def __repr__(self):
         return str(self.points)
 
+    def __len__(self):
+        return len(self.points)
+
+    def __iter__(self):
+        yield self.points
+
     def plot(self):
         assert len(self.array_shape)==2
         
         points = np.array(list(self.points)).T
-        plt.scatter(points[0], points[1], c="k", marker=".")
+        plt.scatter(points[0], points[1],
+                    c="k", marker=".", s=5)
 
         edge = np.array(list(self.edge)).T
-        plt.scatter(edge[0], edge[1], c="g")
+        plt.scatter(edge[0], edge[1],
+                    c="g", marker="o", s=10)
 
         halo = np.array(list(self.halo)).T
-        plt.scatter(halo[0], halo[1], c="0.5")
+        plt.scatter(halo[0], halo[1],
+                    c="0.5", marker="o", s=10)
         
         plt.scatter(self.min_idx[0], self.min_idx[1],
                     c="b", marker="v", s=30)
@@ -77,6 +87,10 @@ class Region:
         self.halo.discard(point)
         
         self.edge.add(point)
+        for ned in neigh.intersection(self.edge):
+            if self.get_neigh(ned).issubset(self.points):
+                self.edge.remove(ned)
+                
         if not new_halo:
             #we found a maximum
             self.max_idx = point
@@ -106,86 +120,128 @@ class Region:
         self.active = False
 
 
+class SlopeDecomposition:
 
-def slopify(a):
-    """Partition an array of funtion values into regions of monotonic connectedness
+    def __init__(self, array):
+        self.array = array
+        self.active_regions = []
+        self.passive_regions = []
+        self.regions = []
+        
+        #sort indices for increasing array value
+        sorted_idx = np.unravel_index(self.array.argsort(axis=None),
+                                      self.array.shape)
 
-    Parameters:
-    a : array_like
-    n-dimensional array of real, which are understood as "height".
+        #create empty levelsets for each value that occurs
+        levelset = {val : set() for val in self.array[sorted_idx]}
 
-    Returns:
-    [regions] : list
-    The list of regions that partition the grid. Look at the "Region" class.
+        #then fill in the indices
+        for idx in np.array(sorted_idx).T:
+            levelset[self.array[tuple(idx)]].add(tuple(idx))
 
-    """
-    active_regions = []
-    passive_regions = []
+        for level, points in levelset.items():
+            #remember which points we add to any region
+            added_points = set()
 
-    #sort indices for increasing array value
-    sorted_idx = np.unravel_index(a.argsort(axis=None), a.shape)
-
-    #create empty levelsets for each value that occurs
-    levelset = {val : set() for val in a[sorted_idx]}
-
-    #then fill in the indices
-    for idx in np.array(sorted_idx).T:
-        levelset[a[tuple(idx)]].add(tuple(idx))
-
-    for level, points in levelset.items():
-        #remember which points we add to any region
-        added_points = set()
-
-        #first off, deal with points that can be assigned to existing regions
-        for region in active_regions:
-            active_points = points.intersection(region.get_halo())
-            
-            while active_points and region.active:
-                for point in active_points:
-                    if point in added_points:
-                        #regions meet, we found a saddle. stop this region now.
-                        #TODO: this is too simplistic, and a bug.
-                        #test halo for connectedness and assign components
-                        #to different regions
-                        region.set_saddle(point)
-                    else:
-                        region.add(point)
-                        added_points.add(point)
-
+            #first off, deal with points that can be assigned to existing regions
+            for region in self.active_regions:
                 active_points = points.intersection(region.get_halo())
                 
-            if not region.active:
-                passive_regions.append(region)
-                active_regions.remove(region)
+                while active_points and region.active:
+                    for point in active_points:
+                        if point in added_points:
+                            #regions meet, we found a saddle.
+                            #stop this region now.
+                            #TODO: this is too simplistic, and a bug.
+                            #test halo for connectedness and assign components
+                            #to different regions.create regions if there
+                            #are too many halo components.
+                            region.set_saddle(point)
+                        else:
+                            region.add(point)
+                            added_points.add(point)
 
-        #then look at remaining points and create new regions as necessary
-        new_regions = []
-        remaining_points = points.difference(added_points)
-        while remaining_points:
-            point = remaining_points.pop()
-            region = Region(point, a)
-            added_points.add(point)
-            new_regions.append(region)
+                    active_points = points.intersection(region.get_halo())
+                    
+                if not region.active:
+                    self.passive_regions.append(region)
+                    self.active_regions.remove(region)
 
-            #now fill the new region as much as possible
-            keep_going = True
-            while keep_going:
-                active_points = remaining_points.intersection(region.get_halo())
-                for point in active_points:
-                    #TODO test for special points and act accordingly
-                    region.add(point)
-                    added_points.add(point)
-                keep_going = active_points  #eventually this becomes empty
-                
-            #and update which points are left now
+            #then look at remaining points and create new regions as necessary
+            new_regions = []
             remaining_points = points.difference(added_points)
-            
-        active_regions += new_regions
-        if level > 115 and level < 125:
-            plot_debug(active_regions + passive_regions, a)
+            while remaining_points:
+                point = remaining_points.pop()
+                region = Region(point, self.array)
+                added_points.add(point)
+                new_regions.append(region)
 
-    return active_regions + passive_regions
+                #now fill the new region as much as possible
+                active_points = remaining_points.intersection(region.get_halo())
+                while active_points:
+                    for point in active_points:
+                        #TODO test for special points and act accordingly
+                        #can only plateau saddles happen here?
+                        region.add(point)
+                        added_points.add(point)
+                    active_points = remaining_points.intersection(region.get_halo())
+                    
+                #and update which points are left now
+                remaining_points = points.difference(added_points)
+                
+            self.active_regions += new_regions
+    ##        if level > 115 and level < 125:
+    ##            plot_debug(active_regions + passive_regions, a)
+    ##            region.plot()
+        self.regions = self.active_regions + self.passive_regions
 
+    def __len__(self):
+        return len(self.regions)
+
+    def __repr__(self):
+        return "Decompostition of a "+str(self.array.shape)+\
+               " "+str(self.array.dtype)+" array into "+\
+               str(len(self))+" slope regions."
+                
+    #plot 2D array in 3D projection
+    def plot(self):
+        assert self.array.ndim==2
+        
+        fig = plt.figure()
+        ax = fig.gca(projection='3d')
+        plt.tight_layout()
+        plt.subplots_adjust(top = 1,
+                            bottom = 0,
+                            right = 1,
+                            left = 0,
+                            hspace = 0,
+                            wspace = 0)
+
+        #plot original data as wire
+        x = range(self.array.shape[0])
+        y = range(self.array.shape[1])
+        x, y = np.meshgrid(x, y)
+        ax.plot_wireframe(x.T, y.T, self.array,
+                          colors="k",
+                          linewidths=0.2)
+
+        #plot colorful markers to indicate different regions
+        colors = ["b", "r", "k", "c", "g", "y", "m"]
+        markers = ["o", "x", "s", "+", "*"]
+        for k, region in enumerate(self.regions):
+            xs = [p[0] for p in region.points]
+            ys = [p[1] for p in region.points]
+            zs = [self.array[p] for p in region.points]
+            ax.scatter(xs, ys, zs,
+                       zdir="z",
+                       zorder=1,
+                       s=35,
+                       c=colors[k%7],
+                       marker=markers[k%5],
+                       depthshade=False)
+        plt.show()
+
+#silly function only for debug
 def plot_debug(regions, a):
     fig = plt.figure()
     ax = fig.gca(projection='3d')
@@ -207,7 +263,7 @@ def plot_debug(regions, a):
 
     #plot colorful markers to indicate different regions
     colors = ["b", "r", "k", "c", "g", "y", "m"]
-    markers = ["o", "x", "s", "+", "*"]
+    markers = ["o", "x", "s", "+", "*", "."]
     for k, region in enumerate(regions):
         xs = [p[0] for p in region.points]
         ys = [p[1] for p in region.points]
@@ -222,47 +278,11 @@ def plot_debug(regions, a):
     ax.view_init(elev=40, azim=150)
     plt.show()
 
-#plot 2D array in 3D projection
-def plot_slopes(a):
-    assert a.ndim==2
-    
-    fig = plt.figure()
-    ax = fig.gca(projection='3d')
-    plt.tight_layout()
-    plt.subplots_adjust(top = 1,
-                        bottom = 0,
-                        right = 1,
-                        left = 0,
-                        hspace = 0,
-                        wspace = 0)
-
-    #plot original data as wire
-    x = range(a.shape[0])
-    y = range(a.shape[1])
-    x, y = np.meshgrid(x, y)
-    ax.plot_wireframe(x.T, y.T, a,
-                      colors="k",
-                      linewidths=0.2)
-
-    #plot colorful markers to indicate different regions
-    colors = ["b", "r", "k", "c", "g", "y", "m"]
-    markers = ["o", "x", "s", "+", "*"]
-    for k, region in enumerate(slopify(a)):
-        xs = [p[0] for p in region.points]
-        ys = [p[1] for p in region.points]
-        zs = [a[p] for p in region.points]
-        ax.scatter(xs, ys, zs,
-                   zdir="z",
-                   zorder=1,
-                   s=35,
-                   c=colors[k%7],
-                   marker=markers[k%5],
-                   depthshade=False)
-    plt.show()
 
 if __name__ == "__main__":
     #dummy data for debug
     #d = np.round(10*np.random.rand(6,6)).astype(np.int)
     pic = Image.open("mediumTestImage.png")
     data = np.array(pic)[..., 1]
-    plot_slopes(data)
+    d=SlopeDecomposition(data)
+    d.plot()
