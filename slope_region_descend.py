@@ -181,7 +181,8 @@ def slopify(a):
             remaining_points = points.difference(added_points)
             
         active_regions += new_regions
-        plot_debug(active_regions + passive_regions, a)
+        if level > 115 and level < 125:
+            plot_debug(active_regions + passive_regions, a)
 
     return active_regions + passive_regions
 
@@ -214,11 +215,11 @@ def plot_debug(regions, a):
         ax.scatter(xs, ys, zs,
                    zdir="z",
                    zorder=1,
-                   s=35,
+                   s=10,
                    c=colors[k%7],
                    marker=markers[k%5],
                    depthshade=False)
-    ax.view_init(elev=0., azim=-160)
+    ax.view_init(elev=40, azim=150)
     plt.show()
 
 #plot 2D array in 3D projection
