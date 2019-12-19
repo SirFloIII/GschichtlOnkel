@@ -107,8 +107,7 @@ class SlopeDecomposition:
         self.array = array
         self.active_regions = []
         self.passive_regions = []
-        self.regions = []
-        
+        777777
         #sort indices for increasing array value
         sorted_idx = np.unravel_index(self.array.argsort(axis=None),
                                       self.array.shape)
@@ -117,13 +116,29 @@ class SlopeDecomposition:
                                     range(self.array.size), self.array.shape)).T}
         
         #create empty levelsets for each value that occurs
-        levelset = {val : set() for val in self.array[sorted_idx]}
+        self.levelsets = {val : set() for val in self.array[sorted_idx]}
 
         #then fill in the indices
         for idx in np.array(sorted_idx).T:
-            levelset[self.array[tuple(idx)]].add(tuple(idx))
-
-        for level, points in tqdm(levelset.items()):
+            self.levelsets[self.array[tuple(idx)]].add(tuple(idx))
+            
+        self.decompose()
+        
+    def decompose(self):
+        
+        for lvl, points in tqdm(sorted(self.levelsets.items(), key = lambda x:x[0])):
+            
+            print(f"""
+Doing level: {lvl}
+Active Regions: {len(self.active_regions)}
+Points in Lvlset: {len(points)}   
+            """)
+            
+            if lvl > 117:
+                if input() == "stop":
+                    return
+            
+            
             #remember which points we add to any region
             added_points = dict()
 
@@ -150,7 +165,7 @@ class SlopeDecomposition:
                                 components = [self.unassigned_points]
                             
                             # test if colliding with another region
-                            crossovers = [r for r in self.regions if r != region and point in r.halo]
+                            crossovers = [r for r in self.active_regions if r != region and point in r.halo]
                             if crossovers:
                                 # swap halos:
                                 # assign connected componets of halo union
@@ -230,7 +245,10 @@ class SlopeDecomposition:
     ##        if level > 115 and level < 125:
     ##            plot_debug(active_regions + passive_regions, a)
     ##            region.plot()
-        self.regions = self.active_regions + self.passive_regions
+        
+    @property
+    def regions(self):
+        return self.active_regions + self.passive_regions
 
     def __len__(self):
         return len(self.regions)
