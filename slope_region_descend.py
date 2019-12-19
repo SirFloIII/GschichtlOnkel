@@ -128,8 +128,7 @@ class SlopeDecomposition:
             added_points = dict()
 
             #first off, deal with points that can be assigned to existing regions
-            while any([r.halo.intersection(points) for r in self.active_regions]):
-                print([r.halo.intersection(points) for r in self.active_regions])
+            while any([r.halo.intersection(points, self.unassigned_points) for r in self.active_regions]):
                 for region in self.active_regions:
                     active_points = points.intersection(region.halo, self.unassigned_points)
                     
