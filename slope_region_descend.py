@@ -2,7 +2,8 @@ import numpy as np
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
 from PIL import Image
-
+from copy import copy
+from tqdm import tqdm
 
 class Region:
 
@@ -10,7 +11,7 @@ class Region:
         self.array_shape = array.shape
         self.min_idx = point
         self.max_idx = None
-        self.sad_idx = None #needn't be a point in the region!
+        self.sad_idx = set() #needn't be a point in the region!
         self.active = True
         self.points = set() #points, both inner and on the edge
         self.edge = set()   #border, belonging to the region
@@ -54,17 +55,8 @@ class Region:
         
         plt.show()
 
-    #get points with index varying at most by 1 in every dimension
-    def get_cube(self, point):
-        idx = np.array(point)
-        low_corner = idx-1
-        low_corner[low_corner<0] = 0
-        high_corner = np.minimum(idx+1, np.array(self.array_shape)-1)
-        offsets = [np.array(i)
-                   for i in np.ndindex(tuple(high_corner+1-low_corner))]
-        return {tuple(low_corner+o) for o in offsets}
-
     #get points that are directly adjacent along the axes
+    #attention when changing: same code duplicated in SlopeDecomposition
     def get_neigh(self, point):
         neigh = set()
         for dim, len in enumerate(self.array_shape):
@@ -76,8 +68,9 @@ class Region:
 
     def add(self, point):
         assert point not in self.points
-        assert point in self.halo or not self.points
-
+        #assert point in self.halo or not self.points
+        #TODO: add an add function for sets and reactivate the assert
+        
         neigh = self.get_neigh(point)
         self.points.add(point)
 
@@ -102,20 +95,6 @@ class Region:
         #if disconn. test globally with A* going along iso surfaces
         #if really disconn, mark saddle and choose one component as new halo
 
-    def get_edge(self):
-        return self.edge
-
-    def get_halo(self):
-        return self.halo
-
-    def remove_from_halo(self, points):
-        #TODO or scrap if not needed
-        pass
-
-    def set_saddle(self, point):
-        self.sad_idx = point
-        self.passivate()
-
     def passivate(self):
         self.active = False
 
@@ -123,6 +102,8 @@ class Region:
 class SlopeDecomposition:
 
     def __init__(self, array):
+        assert array.ndim > 1
+        
         self.array = array
         self.active_regions = []
         self.passive_regions = []
@@ -131,7 +112,10 @@ class SlopeDecomposition:
         #sort indices for increasing array value
         sorted_idx = np.unravel_index(self.array.argsort(axis=None),
                                       self.array.shape)
-
+        
+        self.unassigned_points = {tuple(idx) for idx in np.array(np.unravel_index(
+                                    range(self.array.size), self.array.shape)).T}
+        
         #create empty levelsets for each value that occurs
         levelset = {val : set() for val in self.array[sorted_idx]}
 
@@ -139,52 +123,106 @@ class SlopeDecomposition:
         for idx in np.array(sorted_idx).T:
             levelset[self.array[tuple(idx)]].add(tuple(idx))
 
-        for level, points in levelset.items():
+        for level, points in tqdm(levelset.items()):
             #remember which points we add to any region
-            added_points = set()
+            added_points = dict()
 
             #first off, deal with points that can be assigned to existing regions
-            for region in self.active_regions:
-                active_points = points.intersection(region.get_halo())
-                
-                while active_points and region.active:
-                    for point in active_points:
-                        if point in added_points:
-                            #regions meet, we found a saddle.
-                            #stop this region now.
-                            #TODO: this is too simplistic, and a bug.
-                            #test halo for connectedness and assign components
-                            #to different regions.create regions if there
-                            #are too many halo components.
-                            region.set_saddle(point)
-                        else:
-                            region.add(point)
-                            added_points.add(point)
-
-                    active_points = points.intersection(region.get_halo())
+            while any([r.halo.intersection(points) for r in self.active_regions]):
+                print([r.halo.intersection(points) for r in self.active_regions])
+                for region in self.active_regions:
+                    active_points = points.intersection(region.halo, self.unassigned_points)
                     
-                if not region.active:
-                    self.passive_regions.append(region)
-                    self.active_regions.remove(region)
+                    while active_points and region.active:
+                        for point in active_points:
+                            # das ist "dazutun"
+                            region.add(point)
+                            self.unassigned_points.remove(point)
+                            added_points[point] = region
+                            
+                            # test local connectedness around point as fast heuristic
+                            local_env = self.get_cube(point).intersection(self.unassigned_points)
+                            #local_env.discard(point)
+                            
+                            if len(self.find_connected_components(local_env, local_env)) > 1:
+                                # test global connectedness 
+                                components = self.find_connected_components(local_env, self.unassigned_points)
+                            else:
+                                components = [self.unassigned_points]
+                            
+                            # test if colliding with another region
+                            crossovers = [r for r in self.regions if r != region and point in r.halo]
+                            if crossovers:
+                                # swap halos:
+                                # assign connected componets of halo union
+                                # to the colliding regions
+                                
+                                other_region = crossovers[0]
+                                components = sorted(components, key = len)
+                                total_halo = region.halo.union(other_region.halo)
+                                
+                                if len(components) > 0:
+                                    other_region.halo = total_halo.intersection(components[0])
+                                else:
+                                    #other_region.passivate()
+                                    print("Warning: This should never happen. Pls investigate!")
+                                if len(components) > 1:
+                                    region.halo = total_halo.intersection(components[1])
+                                else:
+                                    region.passivate()
+                                
+                            else:
+                                # wenn nicht andere region:
+                                #   wenn zusammenhängend:
+                                #       einfach dazutun
+                                #   wenn nicht zusammenhängend:
+                                #       punkt dazutun
+                                #       kritischer selbstzusammenstoß
+                                #       iteriere über zusammenhangskomponenten.
+                                #       zusammenhangskomponenten ganz im
+                                #           levelset zur region vereinigen
+                                #       halo wird eingeschränkt auf eine übrige
+                                #           zusammenhangskomponente
+                                #       (vulkan-situation)   
+                                                                
+                                if len(components) > 1:
+                                    first = True
+                                    for component in components:
+                                        if component.issubset(points):
+                                            for p in component:
+                                                region.add(p)
+                                        else:
+                                            if first:
+                                                first = False
+                                                region.halo.intersection_update(component)
+                            
+                                
+                        active_points = points.intersection(region.halo, self.unassigned_points)
+                        
+                    if not region.active:
+                        self.passive_regions.append(region)
+                        self.active_regions.remove(region)
 
             #then look at remaining points and create new regions as necessary
             new_regions = []
-            remaining_points = points.difference(added_points)
+            remaining_points = points.difference(added_points.keys())
             while remaining_points:
                 point = remaining_points.pop()
                 region = Region(point, self.array)
-                added_points.add(point)
+                added_points[point] = region
+                self.unassigned_points.remove(point)
                 new_regions.append(region)
 
                 #now fill the new region as much as possible
-                active_points = remaining_points.intersection(region.get_halo())
+                active_points = remaining_points.intersection(region.halo)
                 while active_points:
                     for point in active_points:
                         #TODO test for special points and act accordingly
                         #can only plateau saddles happen here?
                         region.add(point)
-                        added_points.add(point)
-                    active_points = remaining_points.intersection(region.get_halo())
+                        self.unassigned_points.remove(point)
+                        added_points[point] = region
+                    active_points = remaining_points.intersection(region.halo)
                     
                 #and update which points are left now
                 remaining_points = points.difference(added_points)
@@ -202,7 +240,43 @@ class SlopeDecomposition:
         return "Decompostition of a "+str(self.array.shape)+\
                " "+str(self.array.dtype)+" array into "+\
                str(len(self))+" slope regions."
-                
+    
+    def find_connected_components(self, small_set, big_set):
+        components = []
+        while small_set:
+            seed = small_set.pop()
+            border = {seed}
+            component = set()
+            while border:
+                point = border.pop()
+                component.add(point)
+                border.union(self.get_neigh(point).intersection(big_set).difference(component))
+            components.append(component)
+            small_set.difference_update(component)
+        return components
+    
+    
+    #get points with index varying at most by 1 in every dimension
+    def get_cube(self, point):
+        idx = np.array(point)
+        low_corner = idx-1
+        low_corner[low_corner<0] = 0
+        high_corner = np.minimum(idx+1, np.array(self.array.shape)-1)
+        offsets = [np.array(i)
+                   for i in np.ndindex(tuple(high_corner+1-low_corner))]
+        return {tuple(low_corner+o) for o in offsets}
+    
+    #get points that are directly adjacent along the axes
+    #attention when changing: same code duplicated in Region
+    def get_neigh(self, point):
+        neigh = set()
+        for dim, len in enumerate(self.array.shape):
+            pos = point[dim]
+            for k in [max(0, pos-1), pos, min(len-1, pos+1)]:
+                new_idx = tuple(p if i!=dim else k for i,p in enumerate(point)) 
+                neigh.add(new_idx)
+        return neigh
+    
     #plot 2D array in 3D projection
     def plot(self):
         assert self.array.ndim==2

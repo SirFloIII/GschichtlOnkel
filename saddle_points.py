@@ -317,7 +317,7 @@ if __name__ == "__main__":
 
     pic = Image.open("narzisse.jpg")
     data = np.array(pic)[100:250, 150:300, 1]
-    #plt.imshow(data)
+    plt.imshow(data)
     #plot(data, 6, 1E-3, 0.0)
         
     #generate data
@@ -326,7 +326,7 @@ if __name__ == "__main__":
     x, y = np.meshgrid(r, r)
     f = -np.sin(x*y)+np.cos(x**2+y**2) +\
         np.random.rand(x.shape[0], x.shape[1])/8
-    plot(f, 6)
+    plot(data, 12, rim=1)
         
     ##x=(np.arange(17)-8)/4
     ##x, y, z = np.meshgrid(x, x, x)

@@ -152,7 +152,7 @@ col = {"max": "r",
        "ridge": "m"}
 
 
-im = PIL.Image.open("TestImage.png").convert()
+im = PIL.Image.open("mediumTestImage.png").convert()
 
 array = np.array(im)[:,:,0]
 
