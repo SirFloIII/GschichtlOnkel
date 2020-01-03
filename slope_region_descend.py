@@ -90,11 +90,7 @@ class Region:
             self.edge.difference_update(neigh)
             self.passivate()
         
-        #TODO test for plateau saddle:
-        #test halo locally for connectedness
-        #if disconn. test globally with A* going along iso surfaces
-        #if really disconn, mark saddle and choose one component as new halo
-
+        
     def passivate(self):
         self.active = False
 
@@ -129,24 +125,27 @@ class SlopeDecomposition:
         
     def decompose(self):
         
-        debug_lvl_stop = 0
+#        debug_lvl_stop = 0
         
-        for lvl, points in tqdm(self.levelsets_sorted):
+        for lvl, points in (self.levelsets_sorted):
             
-            print(f"""
-            Doing level: {lvl}
-            Active Regions: {len(self.active_regions)}
-            Points in Lvlset: {len(points)}   
-            """)
+#            print(f"""
+#            Doing level: {lvl}
+#            Active Regions: {len(self.active_regions)}
+#            Points in Lvlset: {len(points)}   
+#            """)
+#            
+#            if lvl >= debug_lvl_stop:
+#                i = input()
+#                if i == "stop":
+#                    return
+#                elif i.isdecimal():
+#                    debug_lvl_stop = int(i)
+#                elif i == "plot":
+#                    self.plot()
             
-            if lvl >= debug_lvl_stop:
-                i = input()
-                if i == "stop":
-                    return
-                elif i.isdecimal():
-                    debug_lvl_stop = int(i)
-                elif i == "plot":
-                    self.plot()
+            if lvl > 117:
+                break
             
             self.decomposeStep(lvl, points)
             
@@ -162,69 +161,71 @@ class SlopeDecomposition:
                 active_points = points.intersection(region.halo, self.unassigned_points)
                 
                 while active_points and region.active:
-                    for point in active_points:
-                        # das ist "dazutun"
-                        region.add(point)
-                        self.unassigned_points.remove(point)
-                        added_points[point] = region
+                    point = active_points.pop()
+                    
+                    # das ist "dazutun"
+                    region.add(point)
+                    self.unassigned_points.remove(point)
+                    added_points[point] = region
+                    
+                    # test local connectedness around point as fast heuristic
+                    local_env = self.get_cube(point).intersection(self.unassigned_points)
+                    #local_env.discard(point)
+                    
+                    if len(self.find_connected_components(local_env, local_env)) > 1:
+                        # test global connectedness 
+                        components = self.find_connected_components(local_env, self.unassigned_points)
+                    else:
+                        components = [self.unassigned_points]
+                    
+                    # test if colliding with another region
+                    crossovers = [r for r in self.active_regions if r != region and point in r.halo]
+                    if crossovers:
+                        # swap halos:
+                        # assign connected componets of halo union
+                        # to the colliding regions
                         
-                        # test local connectedness around point as fast heuristic
-                        local_env = self.get_cube(point).intersection(self.unassigned_points)
-                        #local_env.discard(point)
+                        other_region = crossovers[0]
+                        components = sorted(components, key = len)
+                        print(components)
+                        total_halo = region.halo.union(other_region.halo).intersection(self.unassigned_points)
                         
-                        if len(self.find_connected_components(local_env, local_env)) > 1:
-                            # test global connectedness 
-                            components = self.find_connected_components(local_env, self.unassigned_points)
+                        if len(components) > 0:
+                            other_region.halo = total_halo.intersection(components[0])
                         else:
-                            components = [self.unassigned_points]
-                        
-                        # test if colliding with another region
-                        crossovers = [r for r in self.active_regions if r != region and point in r.halo]
-                        if crossovers:
-                            # swap halos:
-                            # assign connected componets of halo union
-                            # to the colliding regions
-                            
-                            other_region = crossovers[0]
-                            components = sorted(components, key = len)
-                            total_halo = region.halo.union(other_region.halo)
-                            
-                            if len(components) > 0:
-                                other_region.halo = total_halo.intersection(components[0])
-                            else:
-                                #other_region.passivate()
-                                print("Warning: This should never happen. Pls investigate!")
-                            if len(components) > 1:
-                                region.halo = total_halo.intersection(components[1])
-                            else:
-                                region.passivate()
-                            
+                            #other_region.passivate()
+                            print("Warning: This should never happen. Pls investigate!")
+                        if len(components) > 1:
+                            region.halo = total_halo.intersection(components[1])
                         else:
-                            # wenn nicht andere region:
-                            #   wenn zusammenhängend:
-                            #       einfach dazutun
-                            #   wenn nicht zusammenhängend:
-                            #       punkt dazutun
-                            #       kritischer selbstzusammenstoß
-                            #       iteriere über zusammenhangskomponenten.
-                            #       zusammenhangskomponenten ganz im
-                            #           levelset zur region vereinigen
-                            #       halo wird eingeschränkt auf eine übrige
-                            #           zusammenhangskomponente
-                            #       (vulkan-situation)   
-                                                            
-                            if len(components) > 1:
-                                first = True
-                                for component in components:
-                                    if component.issubset(points):
-                                        for p in component:
-                                            region.add(p)
-                                    else:
-                                        if first:
-                                            first = False
-                                            region.halo.intersection_update(component)
+                            region.passivate()
                         
-                            
+                    else:
+                        # wenn nicht andere region:
+                        #   wenn zusammenhängend:
+                        #       einfach dazutun
+                        #   wenn nicht zusammenhängend:
+                        #       punkt dazutun
+                        #       kritischer selbstzusammenstoß
+                        #       iteriere über zusammenhangskomponenten.
+                        #       zusammenhangskomponenten ganz im
+                        #           levelset zur region vereinigen
+                        #       halo wird eingeschränkt auf eine übrige
+                        #           zusammenhangskomponente
+                        #       (vulkan-situation)   
+                                                        
+                        if len(components) > 1:
+                            first = True
+                            for component in components:
+                                if component.issubset(points):
+                                    for p in component:
+                                        region.add(p)
+                                else:
+                                    if first:
+                                        first = False
+                                        region.halo.intersection_update(component)
+                    
+                        
                     active_points = points.intersection(region.halo, self.unassigned_points)
                     
                 if not region.active:
@@ -274,17 +275,22 @@ class SlopeDecomposition:
                str(len(self))+" slope regions."
     
     def find_connected_components(self, small_set, big_set):
+        assert small_set.issubset(big_set)
+        assert len(small_set) != 0
+        
+        small_set_copy = copy(small_set)
+        
         components = []
-        while small_set:
-            seed = small_set.pop()
+        while small_set_copy:
+            seed = small_set_copy.pop()
             border = {seed}
             component = set()
             while border:
                 point = border.pop()
                 component.add(point)
-                border.union(self.get_neigh(point).intersection(big_set).difference(component))
+                border.update(self.get_neigh(point).intersection(big_set).difference(component))
             components.append(component)
-            small_set.difference_update(component)
+            small_set_copy.difference_update(component)
         return components
     
     
@@ -397,42 +403,88 @@ if __name__ == "__main__":
     #d.plot()
     d.decompose()
     
+    alpha = 128
+        
+    colors = ((0xff, 0x9f, 0x1c, alpha),
+              (0xad, 0x34, 0x3e, alpha),
+              (0x06, 0x7b, 0xc2, alpha),
+              (0xd9, 0x5d, 0x39, alpha),
+              (0x2e, 0xc4, 0xb6, alpha))
     
-#    import pygame
-#    
-#    pixelsize = 10
-#    screensize = (pixelsize * data.shape[0], pixelsize * data.shape[1])
-#    
-#    pygame.init()
-#    screen = pygame.display.set_mode(screensize)
-#    pygame.display.set_caption("Border Propagation")
-#    clock = pygame.time.Clock()
-#    
-#    done = False
-#    while (not done):
-#        # --- Main event loop
-#        for event in pygame.event.get(): # User did something
-#            if event.type == pygame.QUIT: # If user clicked close
-#                done = True # Flag that we are done so we exit this loop
-#            if event.type == pygame.KEYDOWN:
-#                if event.key == pygame.K_ESCAPE:
-#                    done = True
-#                elif event.key = pygame.K_SPACE:
-#                    
-#        
-#        
-#        
-#        
-#        
-#        
-#        
-#        
-#        
-#        
-#        pygame.display.flip()
-#        
-#        clock.tick(60)
-#        
-#    pygame.quit()
+    
+    import pygame
+    
+    pixelsize = 20
+    bordersize = 3
+    screensize = (pixelsize * data.shape[0], pixelsize * data.shape[1])
+    
+    
+    
+    pygame.init()
+    screen = pygame.display.set_mode(screensize)
+    pygame.display.set_caption("Border Propagation")
+    clock = pygame.time.Clock()
+    
+    region_surface = pygame.Surface(screensize, flags = pygame.SRCALPHA)
+    region_surface.set_alpha(alpha)
+       
+    try:
+        
+        done = False
+        while (not done):
+            # --- Main event loop
+            for event in pygame.event.get(): # User did something
+                if event.type == pygame.QUIT: # If user clicked close
+                    done = True # Flag that we are done so we exit this loop
+                if event.type == pygame.KEYDOWN:
+                    if event.key == pygame.K_ESCAPE:
+                        done = True
+                    elif event.key == pygame.K_SPACE:
+                        print("Space")
+            
+            
+            # 1. Draw data
+            for i in range(data.shape[0]):
+                for j, v in enumerate(data[i]):
+                    screen.fill((v,v,v), rect = (pixelsize*i,
+                                                 pixelsize*j,
+                                                 pixelsize,
+                                                 pixelsize))
+            
+            # 2. Draw Regions
+            for i, r in enumerate(d.regions):
+                
+                region_surface.fill((0,0,0,0))
+                
+                for p in r.points:
+                    region_surface.fill(colors[i%len(colors)], rect = (pixelsize*p[0],
+                                                               pixelsize*p[1],
+                                                               pixelsize,
+                                                               pixelsize))
+            
+                # 3. Draw Halos
+                for p in r.halo:
+                    region_surface.fill(colors[i%len(colors)], rect = (pixelsize*p[0] + bordersize,
+                                                               pixelsize*p[1] + bordersize,
+                                                               pixelsize - 2*bordersize,
+                                                               pixelsize - 2*bordersize))
+            
+                screen.blit(region_surface, (0,0))
+            
+            # 4. Draw current point
+            
+            
+            
+            
+            
+            
+            
+            
+            pygame.display.flip()
+            
+            clock.tick(60)
+    
+    finally:    
+        pygame.quit()
     
     
