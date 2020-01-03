@@ -88,11 +88,13 @@ class Region:
             #we found a maximum
             self.max_idx = point
             self.edge.difference_update(neigh)
-            self.passivate()
+            #self.passivate("add")
         
         
-    def passivate(self):
+    def passivate(self, calledfrom):
         self.active = False
+        self.halo = set()
+        print("passivated region from", calledfrom, ":", self)
 
 
 class SlopeDecomposition:
@@ -144,17 +146,15 @@ class SlopeDecomposition:
 #                elif i == "plot":
 #                    self.plot()
             
-            if lvl > 117:
-                break
+#            if lvl > 118:
+#                break
             
             self.decomposeStep(lvl, points)
             
             
     
     def decomposeStep(self, lvl, points):
-        #remember which points we add to any region
-        added_points = dict()
-
+  
         #first off, deal with points that can be assigned to existing regions
         while any([r.halo.intersection(points, self.unassigned_points) for r in self.active_regions]):
             for region in self.active_regions:
@@ -166,7 +166,6 @@ class SlopeDecomposition:
                     # das ist "dazutun"
                     region.add(point)
                     self.unassigned_points.remove(point)
-                    added_points[point] = region
                     
                     # test local connectedness around point as fast heuristic
                     local_env = self.get_cube(point).intersection(self.unassigned_points)
@@ -178,6 +177,9 @@ class SlopeDecomposition:
                     else:
                         components = [self.unassigned_points]
                     
+#                    if len(components) == 2:
+#                        return
+                    
                     # test if colliding with another region
                     crossovers = [r for r in self.active_regions if r != region and point in r.halo]
                     if crossovers:
@@ -187,18 +189,16 @@ class SlopeDecomposition:
                         
                         other_region = crossovers[0]
                         components = sorted(components, key = len)
-                        print(components)
                         total_halo = region.halo.union(other_region.halo).intersection(self.unassigned_points)
                         
                         if len(components) > 0:
-                            other_region.halo = total_halo.intersection(components[0])
-                        else:
-                            #other_region.passivate()
-                            print("Warning: This should never happen. Pls investigate!")
+                            region.halo = total_halo.intersection(components[-1])
+                        
                         if len(components) > 1:
-                            region.halo = total_halo.intersection(components[1])
+                            other_region.halo = total_halo.intersection(components[-2])
                         else:
-                            region.passivate()
+                            print(region)
+                            other_region.passivate("only 1 component")
                         
                     else:
                         # wenn nicht andere region:
@@ -220,6 +220,7 @@ class SlopeDecomposition:
                                 if component.issubset(points):
                                     for p in component:
                                         region.add(p)
+                                        self.unassigned_points.remove(p)
                                 else:
                                     if first:
                                         first = False
@@ -234,11 +235,10 @@ class SlopeDecomposition:
 
         #then look at remaining points and create new regions as necessary
         new_regions = []
-        remaining_points = points.difference(added_points.keys())
+        remaining_points = points.intersection(self.unassigned_points)
         while remaining_points:
             point = remaining_points.pop()
             region = Region(point, self.array)
-            added_points[point] = region
             self.unassigned_points.remove(point)
             new_regions.append(region)
 
@@ -250,11 +250,10 @@ class SlopeDecomposition:
                     #can only plateau saddles happen here?
                     region.add(point)
                     self.unassigned_points.remove(point)
-                    added_points[point] = region
                 active_points = remaining_points.intersection(region.halo)
                 
             #and update which points are left now
-            remaining_points = points.difference(added_points)
+            remaining_points = points.intersection(self.unassigned_points)
             
         self.active_regions += new_regions
 ##        if level > 115 and level < 125:
@@ -288,7 +287,7 @@ class SlopeDecomposition:
             while border:
                 point = border.pop()
                 component.add(point)
-                border.update(self.get_neigh(point).intersection(big_set).difference(component))
+                border.update(self.get_cube(point).intersection(big_set).difference(component))
             components.append(component)
             small_set_copy.difference_update(component)
         return components
@@ -409,7 +408,8 @@ if __name__ == "__main__":
               (0xad, 0x34, 0x3e, alpha),
               (0x06, 0x7b, 0xc2, alpha),
               (0xd9, 0x5d, 0x39, alpha),
-              (0x2e, 0xc4, 0xb6, alpha))
+              (0x2e, 0xc4, 0xb6, alpha),
+              (0x7b, 0xa8, 0x32, alpha))
     
     
     import pygame
