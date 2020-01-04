@@ -160,7 +160,17 @@ In this second case, we can't put the points into the existing region, because w
 
 As the water rises, we can add points to an existing region growing it upwards if they are just outside the region\footnote{Why can we do that? By adding only points which are connected to the region we ensure path-connectedness, and by growing the region upwards, we can construct ascending paths from old points to new ones. TODO where do we get connectedness of increment from?}. Otherwise they correspond to a local minimum and have to be dealt with as before, by opening a new region for each point (or rather, each connected component).
 
-With the water rising further still, the regions will grow up to a point where they meet. Any such point is a saddle point, and we have to account for it the next time we want to grow any one of the touching regions. The saddle point connects the edges of the regions which meet in it. Those edges are at the height of the water level.
+With the water rising further still, the regions will grow upwards to a point where they meet. Any such point is a saddle point, and we have to account for it the next time we want to grow any one of the touching regions. The saddle point connects the edges of the regions which meet in it, at the current height of the water level. It might be the case that the not-yet-assigned points just outside the involved regions get separated into multiple connected components, or they might remain connected.
+
+If the points remain connected, then we have to decide for a single one of the involved regions to be allowed to grow upwards from the component. This means that one region effectively inherits the growth directions from the other region(s). The other region(s) lose their potential for expansion and remain frozen in their current state.
+
+If the unassigned points have multiple components, then we may assign one component to each involved region. The regions will then grow only in the directions determined by the assigned components as the water rises. Any region without assigned component remains frozen. Should there be more components than regions, then we open up a new region for each surplus component.
+
+An oddity which can occur are self-loops: A region might grow into a "C"-shape, and then proceed to close up into an "O"-shape. This case can be treated similarly as above, the only difference is that the saddle is found by recognizing that the region collides with itself, instead of with another region.
+
+Eventually this procedure will arrive at the global maximum, and the entire surface will be divided into regions. Since we proceeded with the necessary care and attention along the way, we ensured that the regions remained slope regions, and we also only created additional regions when we absolutely had to, showing that the resulting composition is maximally coarse.
+
+The same algorithm can be applied in higher dimensions. We deal with iso-hyper-surfaces as level sets, but the topological considerations about connectedness remain the same as in the illustrative 2D case.
 \end{document}
 
 
