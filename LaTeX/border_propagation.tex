@@ -62,7 +62,14 @@ TODO
 
 In this section we try to develop an intuitive understanding of the term \emph{slope region} and its generalization to dimensions higher than 2. The concise definitions of the terms already employed here is reserved for the next section.
 
-Consider an image, either gray-scale or in color. If it is a color image, it can be decomposed into its color channels, which can individually be read as gray-scale images. We now think of the light intensity (i.e. the image value) of one such gray-scale image as the height of a landscape, yielding a surface in 3D space. The surface will have hills in areas where the image is bright, and will have dales in dark areas. Please refer to figure TODO REF for a visualization!
+Consider an image, either gray-scale or in color. If it is a color image, it can be decomposed into its color channels, which can individually be read as gray-scale images. We now think of the light intensity (i.e. the image value) of one such gray-scale image as the height of a landscape, yielding a surface in 3D space. The surface will have hills in areas where the image is bright, and will have dales in dark areas. Please refer to figure \ref{fig:conversion} for a visualization!
+
+
+\begin{figure}[h]
+\includegraphics[width=\textwidth]{img/visu1.png}
+\caption{Gray-scale to Height-map conversion}
+\label{fig:conversion}
+\end{figure}
 
 Our aim now is to partition the surface into \emph{regions} (i.e. subsets) in a particular way: We require each region to consist only of a single slope, by which we mean that we can ascend (or descend) from any given point of the region, to any other given point of the region, along a path that runs entirely within the region. Such a decomposition is not unique, but we can at least try to get a partition \emph{as coarse as possible}, meaning that we merge slope regions if the resulting subset is still a slope region, and we iterate this until it can be done no more. There might be many different such coarsest slope decompositions, but we accept any one of them.
 
