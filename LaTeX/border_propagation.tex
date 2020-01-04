@@ -144,34 +144,31 @@ Suppose there exists a $c \in \mathbb{R}$ with $L := f^{-1}(c) \cap A$ not path-
 
 $~$
 
-"$\Leftarrow$" via \emph{ironing out} an arbitrary path:
-
-Given $x, y \in A$ we have to find a monotonic path $\gamma$. Without loss of generality suppose $f(x) \leq f(y)$. Since $A$ is path-connected, there exists an (not necessarily monotonic) path $\gamma_0$ from $x$ to $y$. We define a inductive process, whose limit is a monotonic path.
-
 \begin{wrapfigure}{r}{0.4\textwidth}
 \centering
-\includegraphics[width=0.4\textwidth]{img/lemma_fig1.png}
-\caption{$f \circ \gamma_n$ and $f \circ \gamma_{n+1}$}
+\includegraphics[width=0.4\textwidth]{img/Rising_sun_lemma.png}
+\caption{Rising sun lemma}
 \label{fig:lemma_1}
 \end{wrapfigure}
 
-If $\gamma_n$ is monotonic, then $\gamma := \gamma_n$ and we are done. If not, $f \circ \gamma_n$ must have a local minimum $m_n$ somewhere in $(a,b]$.
+"$\Leftarrow$" via \emph{ironing out} an arbitrary path:
 
-If $f(x) \leq f(m_n)$, we define $b_n := m_n$, else we define $b_n := \sup\{\sigma \mid f(\gamma_n(\sigma)) = f(x) \}$.\footnote{The second case happens at most once in the process.}
+Given $x, y \in A$ we have to find a monotonic path $\gamma$. Without loss of generality suppose $f(x) \leq f(y)$. Since $A$ is path-connected, there exists an (not necessarily monotonic) path $\gamma_0: [a,b] \to A$ from $x$ to $y$. Using the Rising Sun lemma \cite{wiki:rising_sun} on the continuous function $f \circ \gamma_0$ we get the \emph{shadow} $S = \bigcup_{i \in I} (a_n, b_n)$ consisting of at most countably many intervals.
 
-Let $c := f(b_n)$ and $a_n := \inf\{\sigma \mid f(\gamma_n(\sigma)) = c \}$. Because $f$ and $\gamma_n$ are both continuous, it follows that $f(\gamma_n(a_n)) = c$. 
+$S$ consists of the points which contradict the monotony of $f \circ \gamma_0$, thus we want to \emph{iron out} these points.
 
-Now, since the levelset of $c$ is path-connected, we can connect $\gamma_n(a_n)$ and $\gamma_n(b_n)$ with a level path $\gamma_n^* : [a_n, b_n] \to A.$ Thus, we define 
+Let $c_n := f(a_n) = f(b_n)$. Since the levelset of $c_n$ is path-connected, we can connect $\gamma_0(a_n)$ and $\gamma_0(b_n)$ with a level path $\gamma_n^* : [a_n, b_n] \to A.$
+
+Finally, we define:
 \begin{equation*}
-\gamma_{n+1}(\sigma) :=
+\gamma(\sigma) :=
 \begin{cases}
 \gamma_n^*(\sigma) & \sigma \in [a_n, b_n] \\
-\gamma_n(\sigma) & \text{elsewhere}
+\gamma_0(\sigma) & \text{elsewhere}
 \end{cases}
 \end{equation*}
 
-$\gamma_{n+1}$ has at least one local minimum less than $\gamma_n$ since we turned one into a (extended) saddle point. A continuous function has at most countably many local minima. 
-
+$\gamma$ is a monotonic path from $x$ to $y$, thus $A$ is a slope region.
 
 \hfill $\Box$
 
