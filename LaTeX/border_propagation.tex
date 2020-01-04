@@ -78,6 +78,16 @@ In this and the following chapters we will unless otherwise specified consider a
 A path $\gamma: [a,b] \mapsto \Omega$ is called monotonic, 
 \end{defn}
 
+
+
+\section{Motivating The New Algorithm}
+We will now work our way to the central insights on which the border propagation algorithm hinges.
+
+Slope regions can be constructed and grown in a straight-forward iterative manner by sweeping through the function values from lowest to highest. This is similar to the intuition employed in Morse theory. TODO cite morse theory. Visualize a compact 2D surface in 3D space. Initially, our decomposition is empty, i.e. there are no slope regions (and we thus don't yet have an actual \emph{decomposition}).
+
+Starting at a global minimum, we add a new region, containing only the argmin (i.e. a single point on the 2D image where the minimal value is taken). Imagine a water level rising from below the surface, up to the point of first contact. Now, there might be many points where the global minimum is taken. This will either be due to flat regions (\emph{plateaus}) on the surface, which we want to include into the single existing region, or it will be due to individual dales, which all have their lowest point at the same height. In this second case, we can't put the points into the existing region, because we would not be able to get from one argmin to another via a monotonic path. Instead, we need to add a new region for each individual dale, that is to say we need to look at the connected components of the levelset determined by the water height and assign to each component a new region.
+
+As the water rises, we can add points to an existing region growing it upwards if they are just outside it\footnote{Why can we do that? By adding only points which are connected to the region we ensure path-connectedness, and by growing the region upwards, we can construct ascending paths from old points to new ones. TODO where do we get connectedness of increment from?}. Otherwise they correspond to a local minimum and have to be dealt with as before, by opening a new region for each connected component. With the water rising further still, the regions will grow up to a point where they meet. Any such point is a saddle point, and we have to account for it the next time we want to grow any one of the touching regions.
 \end{document}
 
 
