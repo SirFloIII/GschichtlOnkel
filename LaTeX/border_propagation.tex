@@ -16,6 +16,7 @@
 \usepackage{booktabs}
 \usepackage{hhline}
 \usepackage{amsthm}
+\usepackage{cite}
 
 \theoremstyle{plain}
 \newtheorem{thm}{Theorem}[section] % reset theorem numbering for each chapter
@@ -149,18 +150,18 @@ Given $x, y \in A$ we have to find a monotonic path $\gamma$. Since $A$ is path-
 \end{lem}
 
 
-\section{Motivating The New Algorithm}
+\section{Motivating The Border Propagation Algorithm}
 We will now work our way to the central insights on which the border propagation algorithm hinges.
 
-Slope regions can be constructed and grown in a straight-forward iterative manner by sweeping through the function values from lowest to highest. This is similar to the intuition employed in Morse theory. TODO cite morse theory. Visualize a compact 2D surface in 3D space. Initially, our decomposition is empty, i.e. there are no slope regions (and we thus don't yet have an actual \emph{decomposition}).
+Slope regions can be constructed and grown in a straight-forward iterative manner by sweeping through the function values from lowest to highest. This is similar to the intuition employed in Morse theory\cite{MatsumotoYukio2002AitM}. Visualize a smooth, compact 2D surface in 3D space. Initially, our decomposition is empty, i.e. there are no slope regions (and we thus don't yet have an actual \emph{decomposition}).
 
-Starting at a global minimum, we add a new region, containing only the argmin (i.e. a single point on the 2D image where the minimal value is taken). Imagine a water level rising from below the surface, up to the point of first contact. Now, there might be many points where the global minimum is taken. This will either be due to flat regions (\emph{plateaus}) on the surface, which we want to include into the single existing region, or it will be due to individual dales, which all have their lowest point at the same height.
+Starting at the global minimum, we add a new region, containing only the argmin (i.e. a single point on the 2D image where the minimal value is taken). Imagine a water level rising from below the surface, up to the point of first contact. Now, there might be many points where the global minimum is taken. This will either be due to flat regions (\emph{plateaus}) on the surface, which we want to include into the single existing region, or it will be due to individual dales, which all have their lowest point at the same height.
 
 In this second case, we can't put the points into the existing region, because we would not be able to get from one argmin to another via a monotonic path. Instead, we need to add a new region for each individual dale, that is to say we need to look at the connected components of the levelset and assign to each component a new region.
 
-As the water rises, we can add points to an existing region growing it upwards if they are just outside the region\footnote{Why can we do that? By adding only points which are connected to the region we ensure path-connectedness, and by growing the region upwards, we can construct ascending paths from old points to new ones. TODO where do we get connectedness of increment from?}. Otherwise they correspond to a local minimum and have to be dealt with as before, by opening a new region for each point (or rather, each connected component).
+As the water rises, we can add points to an existing region growing it upwards if they are just outside the region\footnote{Why can we do that? By adding only points which are connected to the region we ensure path-connectedness, and by growing the region upwards, we can construct ascending paths from old points to new ones. The smoothness of the surface guarantees that while moving at a fixed height, we can reach all points of the region with that height.}. Otherwise they correspond to a distant local minimum and have to be dealt with as before, by opening a new region for each point (or rather, each connected component).
 
-With the water rising further still, the regions will grow upwards to a point where they meet. Any such point is a saddle point, and we have to account for it the next time we want to grow any one of the touching regions. The saddle point connects the edges of the regions which meet in it, at the current height of the water level. It might be the case that the not-yet-assigned points just outside the involved regions get separated into multiple connected components, or they might remain connected.
+With the water rising further still, the regions will grow upwards to a point where they meet. Any such point is a saddle point, and we have to account for it the next time we want to grow any one of the touching regions. The saddle point connects the edges of the regions which meet in it, at the current height of the water level. It might be the case that the not-yet-assigned points (the ones above the water) get separated into multiple connected components, or they might remain connected.
 
 If the points remain connected, then we have to decide for a single one of the involved regions to be allowed to grow upwards from the component. This means that one region effectively inherits the growth directions from the other region(s). The other region(s) lose their potential for expansion and remain frozen in their current state.
 
@@ -171,6 +172,10 @@ An oddity which can occur are self-loops: A region might grow into a "C"-shape, 
 Eventually this procedure will arrive at the global maximum, and the entire surface will be divided into regions. Since we proceeded with the necessary care and attention along the way, we ensured that the regions remained slope regions, and we also only created additional regions when we absolutely had to, showing that the resulting composition is maximally coarse.
 
 The same algorithm can be applied in higher dimensions. We deal with iso-hyper-surfaces as level sets, but the topological considerations about connectedness remain the same as in the illustrative 2D case.
+
+
+\bibliography{lit}
+\bibliographystyle{gerplain}
 \end{document}
 
 
