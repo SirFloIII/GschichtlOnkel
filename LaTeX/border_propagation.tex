@@ -15,6 +15,16 @@
 \usepackage{graphicx}
 \usepackage{booktabs}
 \usepackage{hhline}
+\usepackage{amsthm}
+
+\theoremstyle{plain}
+\newtheorem{thm}{Theorem}[section] % reset theorem numbering for each chapter
+
+\theoremstyle{definition}
+\newtheorem{defn}[thm]{Definition} % definition numbers are dependent on theorem numbers
+\newtheorem{exmp}[thm]{Example} % same for example numbers
+%https://tex.stackexchange.com/questions/45817/theorem-definition-lemma-problem-numbering
+
 
 \begin{document}
 
@@ -36,11 +46,11 @@ Florian Bogner \& Alexander Palmrich
 \newpage
 
 %% high level abstract: %%
-% - motivate slope region with 2D funcion surface
+% - motivate slope region with 2D function surface
 % - define slope region for any dimension
 % - reference known algorithm
 % - motivate new algorithm for continuous case
-% - describe dicrete algorithm
+% - describe discrete algorithm
 % - many many fancy pictures
 
 \section{Abstract}
@@ -49,7 +59,11 @@ TODO
 
 \section{Definitions}
 
-In this and the following chapters we will unless otherwise specified consider a closed $\Omega \subset \mathbb{R}^n$ with $n > 1$.
+In this and the following chapters we will unless otherwise specified consider a closed $\Omega \subset \mathbb{R}^n$ with $n > 1$. We consider a continuous function $f: \Omega \mapsto \mathbb{R}$, which may be interpreted as a gray-scale image.
+
+\begin{defn}
+A path $\gamma: [a,b] \mapsto \Omega$ is called monotonic, 
+\end{defn}
 
 \end{document}
 
