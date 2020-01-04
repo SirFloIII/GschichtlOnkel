@@ -23,7 +23,6 @@
 \theoremstyle{definition}
 \newtheorem{defn}[thm]{Definition} % definition numbers are dependent on theorem numbers
 \newtheorem{exmp}[thm]{Example} % same for example numbers
-\newtheorem{lem}[thm]{Lemma}
 %https://tex.stackexchange.com/questions/45817/theorem-definition-lemma-problem-numbering
 
 
@@ -76,49 +75,7 @@ By abstracting from image and tomography to a real function defined on some subs
 In this and the following chapters we will unless otherwise specified consider a closed $\Omega \subset \mathbb{R}^n$ with $n > 1$. We consider a continuous function $f: \Omega \mapsto \mathbb{R}$, which may be interpreted as a gray-scale image.
 
 \begin{defn}
-A path $\gamma: [a,b] \mapsto \Omega$ is called \emph{monotonic} if and only if it is continuous and
-\begin{align*}
-\forall & s, t \in [a,b]: s < t \Rightarrow f(\gamma(s)) \leq f(\gamma(t)) ~ \lor \\
-\forall & s, t \in [a,b]: s < t \Rightarrow f(\gamma(s)) \geq f(\gamma(t))
-\end{align*}
-\end{defn}
-
-\begin{defn}
-Let $R \subset \Omega$. $R$ is called \emph{slope region} or \emph{monotonically connected} if and only if for all $x, y \in R$ there exists a monotonic path $\gamma: [a,b] \mapsto R$ with $\gamma(a) = x$ and $\gamma(b) = y$.
-\end{defn}
-
-\begin{defn}
-A family of sets $\left\{ A_i \subset \Omega \mid i \in I \right\}$ is called a \emph{slope region decomposition} if and only if:
-\begin{itemize}
-\item $A_i$ is a slope region for all $i \in I$
-\item $\forall i,j \in I: i \neq j \Rightarrow A_i \cap A_j = \emptyset$.
-\item $\bigcup_{i\in I} A_i = \Omega$
-\end{itemize}
-\end{defn}
-
-%\begin{defn}
-%A slope region decomposition $\left\{ R_i \subset \Omega \mid i \in I \right\}$ is called \emph{maximally coarse} or simply \emph{coarse} if and only if there is no $J \subset I$ with $|J| \geq 2$ and
-%\begin{equation*}
-%\left\{ R_i \subset \Omega \mid i \in I \setminus J \right\} \cup \left\{ \bigcup_{j\in J} R_j \right\}
-%\end{equation*}
-%\end{defn}
-
-
-\begin{defn}
-Consider two slope region decompositions $\mathcal{A} = \left\{ A_i \subset \Omega \mid i \in I \right\}$ and $\mathcal{B} = \left\{ B_j \subset \Omega \mid j \in J \right\}$. We call $\mathcal{A}$ \emph{coarser than} $\mathcal{B}$, in Symbols $\mathcal{A} \succeq \mathcal{B}$ if and only if
-\begin{equation*}
-\forall j \in J ~ \exists i \in I: B_j \subset A_i.
-\end{equation*}
-\end{defn}
-
-\begin{lem}
-$\succeq$ is a partial order, i.e. fulfills reflexivity, antisymmetry and transitivity.
-
-\emph{Proof:} trivial \hfill $\Box$
-\end{lem}
-
-\begin{defn}
-A slope region decomposition $\mathcal{A}$ is called \emph{maximally coarse} or simply \emph{coarse} if and only if there is no other coarser slope region decomposition.
+A path $\gamma: [a,b] \mapsto \Omega$ is called monotonic, 
 \end{defn}
 
 
@@ -128,9 +85,13 @@ We will now work our way to the central insights on which the border propagation
 
 Slope regions can be constructed and grown in a straight-forward iterative manner by sweeping through the function values from lowest to highest. This is similar to the intuition employed in Morse theory. TODO cite morse theory. Visualize a compact 2D surface in 3D space. Initially, our decomposition is empty, i.e. there are no slope regions (and we thus don't yet have an actual \emph{decomposition}).
 
-Starting at a global minimum, we add a new region, containing only the argmin (i.e. a single point on the 2D image where the minimal value is taken). Imagine a water level rising from below the surface, up to the point of first contact. Now, there might be many points where the global minimum is taken. This will either be due to flat regions (\emph{plateaus}) on the surface, which we want to include into the single existing region, or it will be due to individual dales, which all have their lowest point at the same height. In this second case, we can't put the points into the existing region, because we would not be able to get from one argmin to another via a monotonic path. Instead, we need to add a new region for each individual dale, that is to say we need to look at the connected components of the levelset determined by the water height and assign to each component a new region.
+Starting at a global minimum, we add a new region, containing only the argmin (i.e. a single point on the 2D image where the minimal value is taken). Imagine a water level rising from below the surface, up to the point of first contact. Now, there might be many points where the global minimum is taken. This will either be due to flat regions (\emph{plateaus}) on the surface, which we want to include into the single existing region, or it will be due to individual dales, which all have their lowest point at the same height.
 
-As the water rises, we can add points to an existing region growing it upwards if they are just outside it\footnote{Why can we do that? By adding only points which are connected to the region we ensure path-connectedness, and by growing the region upwards, we can construct ascending paths from old points to new ones. TODO where do we get connectedness of increment from?}. Otherwise they correspond to a local minimum and have to be dealt with as before, by opening a new region for each connected component. With the water rising further still, the regions will grow up to a point where they meet. Any such point is a saddle point, and we have to account for it the next time we want to grow any one of the touching regions.
+In this second case, we can't put the points into the existing region, because we would not be able to get from one argmin to another via a monotonic path. Instead, we need to add a new region for each individual dale, that is to say we need to look at the connected components of the levelset and assign to each component a new region.
+
+As the water rises, we can add points to an existing region growing it upwards if they are just outside the region\footnote{Why can we do that? By adding only points which are connected to the region we ensure path-connectedness, and by growing the region upwards, we can construct ascending paths from old points to new ones. TODO where do we get connectedness of increment from?}. Otherwise they correspond to a local minimum and have to be dealt with as before, by opening a new region for each point (or rather, each connected component).
+
+With the water rising further still, the regions will grow up to a point where they meet. Any such point is a saddle point, and we have to account for it the next time we want to grow any one of the touching regions. The saddle point connects the edges of the regions which meet in it. Those edges are at the height of the water level.
 \end{document}
 
 
