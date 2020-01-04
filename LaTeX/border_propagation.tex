@@ -129,7 +129,25 @@ $\succeq$ is a partial order, i.e. fulfills reflexivity, antisymmetry and transi
 A slope region decomposition $\mathcal{A}$ is called \emph{maximally coarse} or simply \emph{coarse} if and only if there is no other coarser slope region decomposition.
 \end{defn}
 
+\begin{lem}
+Let $A \subset \Omega$ be a path-connected set. $A$ is a slope region if and only if all levelsets of $f$ in $A$ are path-connected, i.e.
+\begin{equation*}
+\forall c \in \mathbb{R}: f^{-1}(c) \cap A ~ \text{is path-connected}.
+\end{equation*}
 
+\emph{Proof:} "$\Rightarrow$" via contraposition:
+
+Suppose there exists a $c \in \mathbb{R}$ with $L := f^{-1}(c) \cap A$ not path-connected. We decompose $L$ in its components and pick $x$ and $y$ from different components. Since $f(x) = f(y) = c$ a monotonic path between $x$ and $y$ would have to lie completely in L. However, since $x$ and $y$ are from different components, they cannot be connected by a path in $L$ and therefore cannot be connected with a monotonic path. Therefore, A is not a slope region.
+
+"$\Leftarrow$" via \emph{ironing out} an arbitrary path:
+
+Given $x, y \in A$ we have to find a monotonic path $\gamma$. Since $A$ is path-connected, there exists an (not necessarily monotonic) path $\gamma_0$ from $x$ to $y$.
+
+
+
+
+\hfill $\Box$
+\end{lem}
 
 
 \section{Motivating The Border Propagation Algorithm}
