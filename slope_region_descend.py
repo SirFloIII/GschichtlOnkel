@@ -7,8 +7,8 @@ from tqdm import tqdm
 
 class Region:
 
-    def __init__(self, point, array):
-        self.array_shape = array.shape
+    def __init__(self, point, decomp):
+        self.decomp = decomp
         self.min_idx = point
         self.max_idx = None
         self.sad_idx = set() #needn't be a point in the region!
@@ -55,23 +55,12 @@ class Region:
         
         plt.show()
 
-    #get points that are directly adjacent along the axes
-    #attention when changing: same code duplicated in SlopeDecomposition
-    def get_neigh(self, point):
-        neigh = set()
-        for dim, len in enumerate(self.array_shape):
-            pos = point[dim]
-            for k in [max(0, pos-1), pos, min(len-1, pos+1)]:
-                new_idx = tuple(p if i!=dim else k for i,p in enumerate(point)) 
-                neigh.add(new_idx)
-        return neigh
-
     def add(self, point):
         assert point not in self.points
         #assert point in self.halo or not self.points
         #TODO: add an add function for sets and reactivate the assert
         
-        neigh = self.get_neigh(point)
+        neigh = self.decomp.get_neigh(point)
         self.points.add(point)
 
         new_halo = neigh.difference(self.points)
@@ -81,20 +70,19 @@ class Region:
         
         self.edge.add(point)
         for ned in neigh.intersection(self.edge):
-            if self.get_neigh(ned).issubset(self.points):
+            if self.decomp.get_neigh(ned).issubset(self.points):
                 self.edge.remove(ned)
                 
         if not new_halo:
             #we found a maximum
             self.max_idx = point
             self.edge.difference_update(neigh)
-            #self.passivate("add")
+            #self.passivate()
         
         
-    def passivate(self, calledfrom):
+    def passivate(self):
         self.active = False
         self.halo = set()
-        print("passivated region from", calledfrom, ":", self)
 
 
 class SlopeDecomposition:
@@ -146,12 +134,16 @@ class SlopeDecomposition:
 #                elif i == "plot":
 #                    self.plot()
             
-#            if lvl > 118:
-#                break
+            if lvl > 130:
+                break
             
             self.decomposeStep(lvl, points)
             
-            
+    
+    def doDecomposeStep(self):
+        for lvl, points in (self.levelsets_sorted):
+            self.decomposeStep(lvl, points)
+            yield lvl 
     
     def decomposeStep(self, lvl, points):
   
@@ -171,62 +163,60 @@ class SlopeDecomposition:
                     local_env = self.get_cube(point).intersection(self.unassigned_points)
                     #local_env.discard(point)
                     
-                    if len(self.find_connected_components(local_env, local_env)) > 1:
-                        # test global connectedness 
-                        components = self.find_connected_components(local_env, self.unassigned_points)
-                    else:
-                        components = [self.unassigned_points]
+                    if local_env:
                     
-#                    if len(components) == 2:
-#                        return
-                    
-                    # test if colliding with another region
-                    crossovers = [r for r in self.active_regions if r != region and point in r.halo]
-                    if crossovers:
-                        # swap halos:
-                        # assign connected componets of halo union
-                        # to the colliding regions
-                        
-                        other_region = crossovers[0]
-                        components = sorted(components, key = len)
-                        total_halo = region.halo.union(other_region.halo).intersection(self.unassigned_points)
-                        
-                        if len(components) > 0:
-                            region.halo = total_halo.intersection(components[-1])
-                        
-                        if len(components) > 1:
-                            other_region.halo = total_halo.intersection(components[-2])
+                        if len(self.find_connected_components(local_env, local_env)) > 1:
+                            # test global connectedness 
+                            components = self.find_connected_components(local_env, self.unassigned_points)
                         else:
-                            print(region)
-                            other_region.passivate("only 1 component")
+                            components = [self.unassigned_points]
+                            
+                        # test if colliding with another region
+                        crossovers = [r for r in self.active_regions if r != region and point in r.halo]
+                        if crossovers:
+                            # swap halos:
+                            # assign connected componets of halo union
+                            # to the colliding regions
+                            
+                            other_region = crossovers[0]
+                            components = sorted(components, key = len)
+                            total_halo = region.halo.union(other_region.halo).intersection(self.unassigned_points)
+                            
+                            if len(components) > 0:
+                                region.halo = total_halo.intersection(components[-1])
+                            
+                            if len(components) > 1:
+                                other_region.halo = total_halo.intersection(components[-2])
+                            else:
+                                other_region.passivate()
+                            
+                        else:
+                            # wenn nicht andere region:
+                            #   wenn zusammenhängend:
+                            #       einfach dazutun
+                            #   wenn nicht zusammenhängend:
+                            #       punkt dazutun
+                            #       kritischer selbstzusammenstoß
+                            #       iteriere über zusammenhangskomponenten.
+                            #       zusammenhangskomponenten ganz im
+                            #           levelset zur region vereinigen
+                            #       halo wird eingeschränkt auf eine übrige
+                            #           zusammenhangskomponente
+                            #       (vulkan-situation)   
+                                                            
+                            if len(components) > 1:
+                                first = True
+                                for component in components:
+                                    if component.issubset(points):
+                                        for p in component:
+                                            region.add(p)
+                                            self.unassigned_points.remove(p)
+                                    else:
+                                        if first:
+                                            first = False
+                                            region.halo.intersection_update(component)
                         
-                    else:
-                        # wenn nicht andere region:
-                        #   wenn zusammenhängend:
-                        #       einfach dazutun
-                        #   wenn nicht zusammenhängend:
-                        #       punkt dazutun
-                        #       kritischer selbstzusammenstoß
-                        #       iteriere über zusammenhangskomponenten.
-                        #       zusammenhangskomponenten ganz im
-                        #           levelset zur region vereinigen
-                        #       halo wird eingeschränkt auf eine übrige
-                        #           zusammenhangskomponente
-                        #       (vulkan-situation)   
-                                                        
-                        if len(components) > 1:
-                            first = True
-                            for component in components:
-                                if component.issubset(points):
-                                    for p in component:
-                                        region.add(p)
-                                        self.unassigned_points.remove(p)
-                                else:
-                                    if first:
-                                        first = False
-                                        region.halo.intersection_update(component)
-                    
-                        
+                            
                     active_points = points.intersection(region.halo, self.unassigned_points)
                     
                 if not region.active:
@@ -238,7 +228,7 @@ class SlopeDecomposition:
         remaining_points = points.intersection(self.unassigned_points)
         while remaining_points:
             point = remaining_points.pop()
-            region = Region(point, self.array)
+            region = Region(point, self)
             self.unassigned_points.remove(point)
             new_regions.append(region)
 
@@ -259,6 +249,10 @@ class SlopeDecomposition:
 ##        if level > 115 and level < 125:
 ##            plot_debug(active_regions + passive_regions, a)
 ##            region.plot()
+        
+        for region in self.regions:
+            region.halo.difference_update(points)
+#            region.halo.intersection_update(self.unassigned_points)
     
     
     @property
@@ -294,6 +288,7 @@ class SlopeDecomposition:
     
     
     #get points with index varying at most by 1 in every dimension
+    #attention when changing: same code duplicated in Region
     def get_cube(self, point):
         idx = np.array(point)
         low_corner = idx-1
@@ -387,7 +382,7 @@ def plot_debug(regions, a):
                    marker=markers[k%5],
                    depthshade=False)
     ax.view_init(elev=40, azim=150)
-    plt.draw()
+    
     plt.show()
 
 
@@ -400,8 +395,15 @@ if __name__ == "__main__":
     data = np.array(pic)[..., 1]
     d=SlopeDecomposition(data)
     #d.plot()
-    d.decompose()
+    #d.decompose()
     
+    gen = d.doDecomposeStep()
+    def step():
+        try:
+            gen.__next__()
+        except StopIteration:
+            pass
+
     alpha = 128
         
     colors = ((0xff, 0x9f, 0x1c, alpha),
@@ -437,10 +439,16 @@ if __name__ == "__main__":
                 if event.type == pygame.QUIT: # If user clicked close
                     done = True # Flag that we are done so we exit this loop
                 if event.type == pygame.KEYDOWN:
-                    if event.key == pygame.K_ESCAPE:
+                    if event.key == pygame.K_ESCAPE or event.key == pygame.K_BACKSPACE:
                         done = True
                     elif event.key == pygame.K_SPACE:
-                        print("Space")
+                        step()
+                    elif event.key == pygame.K_RIGHT:
+                        for _ in range(10):
+                            step()
+                    elif event.key == pygame.K_UP:
+                        for _ in range(100):
+                            step()
             
             
             # 1. Draw data
