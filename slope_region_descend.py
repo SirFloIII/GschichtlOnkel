@@ -27,38 +27,8 @@ class Region:
     def __iter__(self):
         yield self.points
 
-    def plot(self):
-        assert len(self.array_shape)==2
-        
-        points = np.array(list(self.points)).T
-        plt.scatter(points[0], points[1],
-                    c="k", marker=".", s=5)
-
-        edge = np.array(list(self.edge)).T
-        plt.scatter(edge[0], edge[1],
-                    c="g", marker="o", s=10)
-
-        halo = np.array(list(self.halo)).T
-        plt.scatter(halo[0], halo[1],
-                    c="0.5", marker="o", s=10)
-        
-        plt.scatter(self.min_idx[0], self.min_idx[1],
-                    c="b", marker="v", s=30)
-
-        if self.max_idx:
-            plt.scatter(self.max_idx[0], self.max_idx[1],
-                        c="r", marker="^", s=30)
-        
-        if self.sad_idx:
-            plt.scatter(self.sad_idx[0], self.sad_idx[1],
-                        c="k", marker="x", s=30)
-        
-        plt.show()
-
     def add(self, point):
         assert point not in self.points
-        #assert point in self.halo or not self.points
-        #TODO: add an add function for sets and reactivate the assert
         
         neigh = self.decomp.get_neigh(point)
         self.points.add(point)
@@ -72,7 +42,8 @@ class Region:
         for ned in neigh.intersection(self.edge):
             if self.decomp.get_neigh(ned).issubset(self.points):
                 self.edge.remove(ned)
-                
+
+        #TODO this is wrong
         if not new_halo:
             #we found a maximum
             self.max_idx = point
@@ -152,69 +123,113 @@ class SlopeDecomposition:
             for region in self.active_regions:
                 active_points = points.intersection(region.halo, self.unassigned_points)
                 
-                while active_points and region.active:
+                while active_points:
                     point = active_points.pop()
-                    
-                    # das ist "dazutun"
                     region.add(point)
                     self.unassigned_points.remove(point)
                     
                     # test local connectedness around point as fast heuristic
                     local_env = self.get_cube(point).intersection(self.unassigned_points)
-                    #local_env.discard(point)
                     
                     if local_env:
                     
                         if len(self.find_connected_components(local_env, local_env)) > 1:
-                            # test global connectedness 
+                            # test global connectedness now
                             components = self.find_connected_components(local_env, self.unassigned_points)
+                            components = sorted(components, key = len, reverse=True)
                         else:
                             components = [self.unassigned_points]
+
+                        involved_regions = [region] + [r for r in self.active_regions
+                                                       if point in r.halo]
+
+                        involved_halos = set()
+                        for r in involved_regions:
+                            involved_halos.update(r.halo)
+                        involved_halos.intersection_update(self.unassigned_points)
+
+                        halo_components = [involved_halos.intersection(c) for c in components]
+
+                        compo_and_halo = list(zip(components, halo_components))
+
+                        for r in involved_regions:
+                            # remember the current halo and wipe it
+                            found_halo = False
+                            old_halo = r.halo
+                            r.halo = set()
+
+                            # then assign a halo component to the region
+                            # the "copy" here is needed for correct iteration
+                            for c, h in copy(compo_and_halo):
+                                if old_halo.intersection(h):
+                                    # this halo component is on the border of r,
+                                    # and can therefor be assigned to r.
+                                    is_plateau = c.issubset(points)
+                                    if is_plateau or not found_halo:
+                                        # add plateaus to the region halo without
+                                        # counting them as a found_halo
+                                        r.halo.update(h)
+                                        compo_and_halo.remove((c,h))
+                                        if not is_plateau:
+                                            found_halo = True
+
+                            if not found_halo:
+                                r.passivate()
+
+                        # deal with remaining components
+                        for c, h in compo_and_halo:
+                            point = h.pop()
+                            r = Region(point, self)
+                            self.unassigned_points.remove(point)
+                            self.active_regions.append(r)
+                            for p in h:
+                                #TODO test for self-collision
+                                r.add(p)
+                                self.unassigned_points.remove(p)
+                            r.halo.intersection_update(self.unassigned_points)
                             
-                        # test if colliding with another region
-                        crossovers = [r for r in self.active_regions if r != region and point in r.halo]
-                        if crossovers:
-                            # swap halos:
-                            # assign connected componets of halo union
-                            # to the colliding regions
-                            
-                            other_region = crossovers[0]
-                            components = sorted(components, key = len)
-                            total_halo = region.halo.union(other_region.halo).intersection(self.unassigned_points)
-                            
-                            if len(components) > 0:
-                                region.halo = total_halo.intersection(components[-1])
-                            
-                            if len(components) > 1:
-                                other_region.halo = total_halo.intersection(components[-2])
-                            else:
-                                other_region.passivate()
-                            
-                        else:
-                            # wenn nicht andere region:
-                            #   wenn zusammenhängend:
-                            #       einfach dazutun
-                            #   wenn nicht zusammenhängend:
-                            #       punkt dazutun
-                            #       kritischer selbstzusammenstoß
-                            #       iteriere über zusammenhangskomponenten.
-                            #       zusammenhangskomponenten ganz im
-                            #           levelset zur region vereinigen
-                            #       halo wird eingeschränkt auf eine übrige
-                            #           zusammenhangskomponente
-                            #       (vulkan-situation)   
-                                                            
-                            if len(components) > 1:
-                                first = True
-                                for component in components:
-                                    if component.issubset(points):
-                                        for p in component:
-                                            region.add(p)
-                                            self.unassigned_points.remove(p)
-                                    else:
-                                        if first:
-                                            first = False
-                                            region.halo.intersection_update(component)
+##                        # test if colliding with another region
+##                        crossovers = [r for r in self.active_regions if r != region and point in r.halo]
+##                        if crossovers:
+##                            # swap halos:
+##                            # assign connected componets of halo union
+##                            # to the colliding regions
+##                            
+##                            other_region = crossovers[0]
+##                            total_halo = region.halo.union(other_region.halo).intersection(self.unassigned_points)
+##                            
+##                            if len(components) > 0:
+##                                # assign longest halo to region
+##                                region.halo = total_halo.intersection(components[0])
+##                            
+##                            if len(components) > 1:
+##                                # assign second longest halo to other region
+##                                other_region.halo = total_halo.intersection(components[1])
+##                                #TODO: distribute to further crossover regions
+##                                #TODO: assign remaining components to new regions
+##                                
+##                            else: # no halo left for other region
+##                                other_region.passivate()
+##                            
+##                        else: # no crossover
+##                            # if only one component: nothing to worry about, we're done
+##                            
+##                            # if more than one component, we need to distribute them                            
+##                            if len(components) > 1:
+##                                first = True
+##                                for component in components:
+##                                    if component.issubset(points):
+##                                        # such components can simply be added to the region,
+##                                        # since they are inside a plateau.
+##                                        for p in component:
+##                                            region.add(p)
+##                                            self.unassigned_points.remove(p)
+##                                    else:
+##                                        # assign one component to the region
+##                                        if first:
+##                                            first = False
+##                                            region.halo.intersection_update(component)
+##                                        # TODO open up new regions for further components
                         
                             
                     active_points = points.intersection(region.halo, self.unassigned_points)
@@ -236,8 +251,7 @@ class SlopeDecomposition:
             active_points = remaining_points.intersection(region.halo)
             while active_points:
                 for point in active_points:
-                    #TODO test for special points and act accordingly
-                    #can only plateau saddles happen here?
+                    #TODO test for self-collision
                     region.add(point)
                     self.unassigned_points.remove(point)
                 active_points = remaining_points.intersection(region.halo)
@@ -246,13 +260,10 @@ class SlopeDecomposition:
             remaining_points = points.intersection(self.unassigned_points)
             
         self.active_regions += new_regions
-##        if level > 115 and level < 125:
-##            plot_debug(active_regions + passive_regions, a)
-##            region.plot()
-        
+
+        # cut away parts of the halos which are already assigned
         for region in self.regions:
-            region.halo.difference_update(points)
-#            region.halo.intersection_update(self.unassigned_points)
+            region.halo.intersection_update(self.unassigned_points)
     
     
     @property
@@ -308,82 +319,82 @@ class SlopeDecomposition:
                 new_idx = tuple(p if i!=dim else k for i,p in enumerate(point)) 
                 neigh.add(new_idx)
         return neigh
-    
-    #plot 2D array in 3D projection
-    def plot(self):
-        assert self.array.ndim==2
-        
-        fig = plt.figure()
-        ax = fig.gca(projection='3d')
-        plt.tight_layout()
-        plt.subplots_adjust(top = 1,
-                            bottom = 0,
-                            right = 1,
-                            left = 0,
-                            hspace = 0,
-                            wspace = 0)
 
-        #plot original data as wire
-        x = range(self.array.shape[0])
-        y = range(self.array.shape[1])
-        x, y = np.meshgrid(x, y)
-        ax.plot_wireframe(x.T, y.T, self.array,
-                          colors="k",
-                          linewidths=0.2)
-
-        #plot colorful markers to indicate different regions
-        colors = ["b", "r", "k", "c", "g", "y", "m"]
-        markers = ["o", "x", "s", "+", "*"]
-        for k, region in enumerate(self.regions):
-            xs = [p[0] for p in region.points]
-            ys = [p[1] for p in region.points]
-            zs = [self.array[p] for p in region.points]
-            ax.scatter(xs, ys, zs,
-                       zdir="z",
-                       zorder=1,
-                       s=35,
-                       c=colors[k%7],
-                       marker=markers[k%5],
-                       depthshade=False)
-        plt.show()
-
-#silly function only for debug
-def plot_debug(regions, a):
-    fig = plt.figure()
-    ax = fig.gca(projection='3d')
-    plt.tight_layout()
-    plt.subplots_adjust(top = 1,
-                        bottom = 0,
-                        right = 1,
-                        left = 0,
-                        hspace = 0,
-                        wspace = 0)
-
-    #plot original data as wire
-    x = range(a.shape[0])
-    y = range(a.shape[1])
-    x, y = np.meshgrid(x, y)
-    ax.plot_wireframe(x.T, y.T, a,
-                      colors="k",
-                      linewidths=0.2)
-
-    #plot colorful markers to indicate different regions
-    colors = ["b", "r", "k", "c", "g", "y", "m"]
-    markers = ["o", "x", "s", "+", "*", "."]
-    for k, region in enumerate(regions):
-        xs = [p[0] for p in region.points]
-        ys = [p[1] for p in region.points]
-        zs = [a[p] for p in region.points]
-        ax.scatter(xs, ys, zs,
-                   zdir="z",
-                   zorder=1,
-                   s=10,
-                   c=colors[k%7],
-                   marker=markers[k%5],
-                   depthshade=False)
-    ax.view_init(elev=40, azim=150)
-    
-    plt.show()
+##    #plot 2D array in 3D projection
+##    def plot(self):
+##        assert self.array.ndim==2
+##        
+##        fig = plt.figure()
+##        ax = fig.gca(projection='3d')
+##        plt.tight_layout()
+##        plt.subplots_adjust(top = 1,
+##                            bottom = 0,
+##                            right = 1,
+##                            left = 0,
+##                            hspace = 0,
+##                            wspace = 0)
+##
+##        #plot original data as wire
+##        x = range(self.array.shape[0])
+##        y = range(self.array.shape[1])
+##        x, y = np.meshgrid(x, y)
+##        ax.plot_wireframe(x.T, y.T, self.array,
+##                          colors="k",
+##                          linewidths=0.2)
+##
+##        #plot colorful markers to indicate different regions
+##        colors = ["b", "r", "k", "c", "g", "y", "m"]
+##        markers = ["o", "x", "s", "+", "*"]
+##        for k, region in enumerate(self.regions):
+##            xs = [p[0] for p in region.points]
+##            ys = [p[1] for p in region.points]
+##            zs = [self.array[p] for p in region.points]
+##            ax.scatter(xs, ys, zs,
+##                       zdir="z",
+##                       zorder=1,
+##                       s=35,
+##                       c=colors[k%7],
+##                       marker=markers[k%5],
+##                       depthshade=False)
+##        plt.show()
+##
+##silly function only for debug
+##def plot_debug(regions, a):
+##    fig = plt.figure()
+##    ax = fig.gca(projection='3d')
+##    plt.tight_layout()
+##    plt.subplots_adjust(top = 1,
+##                        bottom = 0,
+##                        right = 1,
+##                        left = 0,
+##                        hspace = 0,
+##                        wspace = 0)
+##
+##    #plot original data as wire
+##    x = range(a.shape[0])
+##    y = range(a.shape[1])
+##    x, y = np.meshgrid(x, y)
+##    ax.plot_wireframe(x.T, y.T, a,
+##                      colors="k",
+##                      linewidths=0.2)
+##
+##    #plot colorful markers to indicate different regions
+##    colors = ["b", "r", "k", "c", "g", "y", "m"]
+##    markers = ["o", "x", "s", "+", "*", "."]
+##    for k, region in enumerate(regions):
+##        xs = [p[0] for p in region.points]
+##        ys = [p[1] for p in region.points]
+##        zs = [a[p] for p in region.points]
+##        ax.scatter(xs, ys, zs,
+##                   zdir="z",
+##                   zorder=1,
+##                   s=10,
+##                   c=colors[k%7],
+##                   marker=markers[k%5],
+##                   depthshade=False)
+##    ax.view_init(elev=40, azim=150)
+##    
+##    plt.show()
 
 
 if __name__ == "__main__":
@@ -416,7 +427,7 @@ if __name__ == "__main__":
     
     import pygame
     
-    pixelsize = 20
+    pixelsize = 12
     bordersize = 3
     screensize = (pixelsize * data.shape[0], pixelsize * data.shape[1])
     
