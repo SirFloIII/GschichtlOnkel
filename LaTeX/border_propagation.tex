@@ -17,6 +17,7 @@
 \usepackage{hhline}
 \usepackage{amsthm}
 \usepackage{cite}
+\usepackage{wrapfig}
 
 \theoremstyle{plain}
 \newtheorem{thm}{Theorem}[section] % reset theorem numbering for each chapter
@@ -81,10 +82,10 @@ By abstracting from image and tomography to a real function defined on some subs
 
 \section{Definitions}
 
-In this and the following chapters we will unless otherwise specified consider a closed $\Omega \subset \mathbb{R}^n$ with $n > 1$. We consider a continuous function $f: \Omega \mapsto \mathbb{R}$, which may be interpreted as a gray-scale image.
+In this and the following chapters we will unless otherwise specified consider a closed $\Omega \subset \mathbb{R}^n$ with $n > 1$. We consider a continuous function $f: \Omega \to \mathbb{R}$, which may be interpreted as a gray-scale image.
 
 \begin{defn}
-A path $\gamma: [a,b] \mapsto \Omega$ is called \emph{monotonic} if and only if it is continuous and
+A path $\gamma: [a,b] \to \Omega$ is called \emph{monotonic} if and only if it is continuous and
 \begin{align*}
 \forall & s, t \in [a,b]: s < t \Rightarrow f(\gamma(s)) \leq f(\gamma(t)) ~ \lor \\
 \forall & s, t \in [a,b]: s < t \Rightarrow f(\gamma(s)) \geq f(\gamma(t))
@@ -92,7 +93,7 @@ A path $\gamma: [a,b] \mapsto \Omega$ is called \emph{monotonic} if and only if 
 \end{defn}
 
 \begin{defn}
-Let $R \subset \Omega$. $R$ is called \emph{slope region} or \emph{monotonically connected} if and only if for all $x, y \in R$ there exists a monotonic path $\gamma: [a,b] \mapsto R$ with $\gamma(a) = x$ and $\gamma(b) = y$.
+Let $R \subset \Omega$. $R$ is called \emph{slope region} or \emph{monotonically connected} if and only if for all $x, y \in R$ there exists a monotonic path $\gamma: [a,b] \to R$ with $\gamma(a) = x$ and $\gamma(b) = y$.
 \end{defn}
 
 \begin{defn}
@@ -134,20 +135,45 @@ Let $A \subset \Omega$ be a path-connected set. $A$ is a slope region if and onl
 \begin{equation*}
 \forall c \in \mathbb{R}: f^{-1}(c) \cap A ~ \text{is path-connected}.
 \end{equation*}
+\end{lem}
 
 \emph{Proof:} "$\Rightarrow$" via contraposition:
 
 Suppose there exists a $c \in \mathbb{R}$ with $L := f^{-1}(c) \cap A$ not path-connected. We decompose $L$ in its components and pick $x$ and $y$ from different components. Since $f(x) = f(y) = c$ a monotonic path between $x$ and $y$ would have to lie completely in L. However, since $x$ and $y$ are from different components, they cannot be connected by a path in $L$ and therefore cannot be connected with a monotonic path. Therefore, A is not a slope region.
 
+$~$
+
 "$\Leftarrow$" via \emph{ironing out} an arbitrary path:
 
-Given $x, y \in A$ we have to find a monotonic path $\gamma$. Since $A$ is path-connected, there exists an (not necessarily monotonic) path $\gamma_0$ from $x$ to $y$. If it is monotonic, we win. Else, we leave it as an exercise for the reader.
+Given $x, y \in A$ we have to find a monotonic path $\gamma$. Without loss of generality suppose $f(x) \leq f(y)$. Since $A$ is path-connected, there exists an (not necessarily monotonic) path $\gamma_0$ from $x$ to $y$. We define a inductive process, whose limit is a monotonic path.
 
+\begin{wrapfigure}{r}{0.4\textwidth}
+\centering
+\includegraphics[width=0.4\textwidth]{img/lemma_fig1.png}
+\caption{$f \circ \gamma_n$ and $f \circ \gamma_{n+1}$}
+\label{fig:lemma_1}
+\end{wrapfigure}
 
+If $\gamma_n$ is monotonic, then $\gamma := \gamma_n$ and we are done. If not, $f \circ \gamma_n$ must have a local minimum $m_n$ somewhere in $(a,b]$.
+
+If $f(x) \leq f(m_n)$, we define $b_n := m_n$, else we define $b_n := \sup\{\sigma \mid f(\gamma_n(\sigma)) = f(x) \}$.\footnote{The second case happens at most once in the process.}
+
+Let $c := f(b_n)$ and $a_n := \inf\{\sigma \mid f(\gamma_n(\sigma)) = c \}$. Because $f$ and $\gamma_n$ are both continuous, it follows that $f(\gamma_n(a_n)) = c$. 
+
+Now, since the levelset of $c$ is path-connected, we can connect $\gamma_n(a_n)$ and $\gamma_n(b_n)$ with a level path $\gamma_n^* : [a_n, b_n] \to A.$ Thus, we define 
+\begin{equation*}
+\gamma_{n+1}(\sigma) :=
+\begin{cases}
+\gamma_n^*(\sigma) & \sigma \in [a_n, b_n] \\
+\gamma_n(\sigma) & \text{elsewhere}
+\end{cases}
+\end{equation*}
+
+$\gamma_{n+1}$ has at least one local minimum less than $\gamma_n$ since we turned one into a (extended) saddle point. A continuous function has at most countably many local minima. 
 
 
 \hfill $\Box$
-\end{lem}
+
 
 
 \section{Motivating The Border Propagation Algorithm}
