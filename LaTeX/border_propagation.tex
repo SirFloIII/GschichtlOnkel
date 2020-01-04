@@ -85,7 +85,7 @@ By abstracting from image and tomography to a real function defined on some subs
 In this and the following chapters we will consider a set $\Omega \subset \mathbb{R}^n$ with $n > 1$ and a continuous function $f: \Omega \mapsto \mathbb{R}$.
 
 \begin{defn}
-A path $\gamma: [a,b] \mapsto \Omega$ is called \emph{monotonic} if and only if it is continuous and
+A path $\gamma: [a,b] \to \Omega$ is called \emph{monotonic} if and only if it is continuous and
 \begin{align*}
 \forall & s, t \in [a,b]: s < t \Rightarrow f(\gamma(s)) \leq f(\gamma(t)) ~ \lor \\
 \forall & s, t \in [a,b]: s < t \Rightarrow f(\gamma(s)) \geq f(\gamma(t))
@@ -93,7 +93,7 @@ A path $\gamma: [a,b] \mapsto \Omega$ is called \emph{monotonic} if and only if 
 \end{defn}
 
 \begin{defn}
-Let $R \subset \Omega$. $R$ is called \emph{slope region} or \emph{monotonically connected} if and only if for all $x, y \in R$ there exists a monotonic path $\gamma: [a,b] \mapsto R$ with $\gamma(a) = x$ and $\gamma(b) = y$.
+Let $R \subset \Omega$. $R$ is called \emph{slope region} or \emph{monotonically connected} if and only if for all $x, y \in R$ there exists a monotonic path $\gamma: [a,b] \to R$ with $\gamma(a) = x$ and $\gamma(b) = y$.
 \end{defn}
 
 \begin{defn}
@@ -135,20 +135,42 @@ Let $A \subset \Omega$ be a path-connected set. $A$ is a slope region if and onl
 \begin{equation*}
 \forall c \in \mathbb{R}: f^{-1}(c) \cap A ~ \text{is path-connected}.
 \end{equation*}
+\end{lem}
 
 \emph{Proof:} "$\Rightarrow$" via contraposition:
 
 Suppose there exists a $c \in \mathbb{R}$ with $L := f^{-1}(c) \cap A$ not path-connected. We decompose $L$ in its components and pick $x$ and $y$ from different components. Since $f(x) = f(y) = c$ a monotonic path between $x$ and $y$ would have to lie completely in L. However, since $x$ and $y$ are from different components, they cannot be connected by a path in $L$ and therefore cannot be connected with a monotonic path. Therefore, A is not a slope region.
 
+$~$
+
+\begin{wrapfigure}{r}{0.4\textwidth}
+\centering
+\includegraphics[width=0.4\textwidth]{img/Rising_sun_lemma.png}
+\caption{Rising sun lemma}
+\label{fig:lemma_1}
+\end{wrapfigure}
+
 "$\Leftarrow$" via \emph{ironing out} an arbitrary path:
 
-Given $x, y \in A$ we have to find a monotonic path $\gamma$. Since $A$ is path-connected, there exists an (not necessarily monotonic) path $\gamma_0$ from $x$ to $y$. If it is monotonic, we win. Else, we leave it as an exercise for the reader.
+Given $x, y \in A$ we have to find a monotonic path $\gamma$. Without loss of generality suppose $f(x) \geq f(y)$. Since $A$ is path-connected, there exists an (not necessarily monotonic) path $\gamma_0: [a,b] \to A$ from $x$ to $y$. Using the Rising Sun lemma \cite{grill} on the continuous function $f \circ \gamma_0$ we get the \emph{shadow} $S = \bigcup_{i \in I} (a_n, b_n)$ consisting of at most countably many intervals.
 
+$S$ consists of the points which contradict the monotony of $f \circ \gamma_0$, thus we want to \emph{iron out} these points.
 
+Let $c_n := f(a_n) = f(b_n)$. Since the levelset of $c_n$ is path-connected, we can connect $\gamma_0(a_n)$ and $\gamma_0(b_n)$ with a level path $\gamma_n^* : [a_n, b_n] \to A.$
 
+Finally, we define:
+\begin{equation*}
+\gamma(\sigma) :=
+\begin{cases}
+\gamma_n^*(\sigma) & \sigma \in [a_n, b_n] \\
+\gamma_0(\sigma) & \text{elsewhere}
+\end{cases}
+\end{equation*}
+
+$\gamma$ is a monotonic path from $x$ to $y$, thus $A$ is a slope region.
 
 \hfill $\Box$
-\end{lem}
+
 
 
 \section{Motivating The Border Propagation Algorithm}
