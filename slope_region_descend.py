@@ -177,16 +177,29 @@ class SlopeDecomposition:
                                 r.passivate()
 
                         # deal with remaining components
-                        for c, h in compo_and_halo:
+                        while compo_and_halo:
+                            # grab a point from a remaining halo,
+                            # and start a region from there.
+                            c,h = compo_and_halo.pop()
                             point = h.pop()
                             r = Region(point, self)
                             self.unassigned_points.remove(point)
                             self.active_regions.append(r)
+
+                            # add the whole halo component to the region
                             for p in h:
-                                #TODO test for self-collision
                                 r.add(p)
                                 self.unassigned_points.remove(p)
                             r.halo.intersection_update(self.unassigned_points)
+
+                            # now look at the connected components of
+                            # the region halo in the unassigned points.
+                            # if we get more than one component, there
+                            # was a self-collision and we need to create
+                            # additional regions for the new components
+                            h_compo = self.find_connected_components(r.halo, self.unassigned_points)
+                            compo_and_halo += [(c, r.halo.intersection(c)) for c in h_compo[1:]]
+                            r.halo.intersection_update(h_compo[0])
                             
 ##                        # test if colliding with another region
 ##                        crossovers = [r for r in self.active_regions if r != region and point in r.halo]
