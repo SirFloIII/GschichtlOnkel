@@ -136,6 +136,7 @@ class SlopeDecomposition:
                     
                         if len(self.find_connected_components(local_env, local_env)) > 1:
                             # test global connectedness now
+                            print("beep boop")
                             components = self.find_connected_components(local_env, self.unassigned_points)
                             components = sorted(components, key = len, reverse=True)
                         else:
@@ -403,7 +404,7 @@ if __name__ == "__main__":
     
     #dummy data for debug
     #d = np.round(10*np.random.rand(6,6)).astype(np.int)
-    pic = Image.open("mediumTestImage.png")
+    pic = Image.open("perlin.png")
     data = np.array(pic)[..., 1]
     d=SlopeDecomposition(data)
     #d.plot()
@@ -432,8 +433,8 @@ if __name__ == "__main__":
     
     import pygame
     
-    pixelsize = 20
-    bordersize = 3
+    pixelsize = 1
+    bordersize = 0
     screensize = (pixelsize * data.shape[0], pixelsize * data.shape[1])
     
     
@@ -460,10 +461,10 @@ if __name__ == "__main__":
                     elif event.key == pygame.K_SPACE:
                         step()
                     elif event.key == pygame.K_RIGHT:
-                        for _ in range(10):
+                        for _ in tqdm(range(10)):
                             step()
                     elif event.key == pygame.K_UP:
-                        for _ in range(100):
+                        for _ in tqdm(range(100)):
                             step()
             
             
