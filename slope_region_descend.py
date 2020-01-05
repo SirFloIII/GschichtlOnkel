@@ -417,7 +417,7 @@ if __name__ == "__main__":
     
     #dummy data for debug
     #d = np.round(10*np.random.rand(6,6)).astype(np.int)
-    pic = Image.open("perlin.png")
+    pic = Image.open("perlin_small.png")
     data = np.array(pic)[..., 1]
     d=SlopeDecomposition(data)
     #d.plot()
@@ -429,7 +429,8 @@ if __name__ == "__main__":
             gen.__next__()
         except StopIteration:
             pass
-
+    
+    
     alpha = 128
         
     colors = ((0xff, 0x9f, 0x1c, alpha),
@@ -446,8 +447,8 @@ if __name__ == "__main__":
     
     import pygame
     
-    pixelsize = 1
-    bordersize = 0
+    pixelsize = 5
+    bordersize = 2
     screensize = (pixelsize * data.shape[0], pixelsize * data.shape[1])
     
     
