@@ -4,6 +4,7 @@ from mpl_toolkits.mplot3d import Axes3D
 from PIL import Image
 from copy import copy
 from tqdm import tqdm
+#from numba import jit, njit
 
 class Region:
 
@@ -17,7 +18,6 @@ class Region:
         self.edge = set()   #border, belonging to the region
         self.halo = set()   #border, not (yet) part of the region
         self.add(point)
-        self.id = len(decomp.regions)
 
     def __repr__(self):
         return str(self.points)
@@ -83,7 +83,19 @@ class SlopeDecomposition:
         #then sort by level
         self.levelsets_sorted = sorted(self.levelsets.items(), key = lambda x:x[0])
         
-        #self.decompose()
+        #self.decompose()    
+    
+    @property
+    def regions(self):
+        return self.active_regions + self.passive_regions
+
+    def __len__(self):
+        return len(self.regions)
+
+    def __repr__(self):
+        return "Decompostition of a "+str(self.array.shape)+\
+               " "+str(self.array.dtype)+" array into "+\
+               str(len(self))+" slope regions."
         
     def decompose(self):
         
@@ -202,50 +214,6 @@ class SlopeDecomposition:
                             compo_and_halo += [(c, r.halo.intersection(c)) for c in h_compo[1:]]
                             r.halo.intersection_update(h_compo[0])
                             
-##                        # test if colliding with another region
-##                        crossovers = [r for r in self.active_regions if r != region and point in r.halo]
-##                        if crossovers:
-##                            # swap halos:
-##                            # assign connected componets of halo union
-##                            # to the colliding regions
-##                            
-##                            other_region = crossovers[0]
-##                            total_halo = region.halo.union(other_region.halo).intersection(self.unassigned_points)
-##                            
-##                            if len(components) > 0:
-##                                # assign longest halo to region
-##                                region.halo = total_halo.intersection(components[0])
-##                            
-##                            if len(components) > 1:
-##                                # assign second longest halo to other region
-##                                other_region.halo = total_halo.intersection(components[1])
-##                                #TODO: distribute to further crossover regions
-##                                #TODO: assign remaining components to new regions
-##                                
-##                            else: # no halo left for other region
-##                                other_region.passivate()
-##                            
-##                        else: # no crossover
-##                            # if only one component: nothing to worry about, we're done
-##                            
-##                            # if more than one component, we need to distribute them                            
-##                            if len(components) > 1:
-##                                first = True
-##                                for component in components:
-##                                    if component.issubset(points):
-##                                        # such components can simply be added to the region,
-##                                        # since they are inside a plateau.
-##                                        for p in component:
-##                                            region.add(p)
-##                                            self.unassigned_points.remove(p)
-##                                    else:
-##                                        # assign one component to the region
-##                                        if first:
-##                                            first = False
-##                                            region.halo.intersection_update(component)
-##                                        # TODO open up new regions for further components
-                        
-                            
                     active_points = points.intersection(region.halo, self.unassigned_points)
                     
                 if not region.active:
@@ -278,19 +246,7 @@ class SlopeDecomposition:
         # cut away parts of the halos which are already assigned
         for region in self.regions:
             region.halo.intersection_update(self.unassigned_points)
-    
-    
-    @property
-    def regions(self):
-        return self.passive_regions + self.active_regions
 
-    def __len__(self):
-        return len(self.regions)
-
-    def __repr__(self):
-        return "Decompostition of a "+str(self.array.shape)+\
-               " "+str(self.array.dtype)+" array into "+\
-               str(len(self))+" slope regions."
     
     def find_connected_components(self, small_set, big_set):
         assert small_set.issubset(big_set)
@@ -314,13 +270,26 @@ class SlopeDecomposition:
     
     #get points with index varying at most by 1 in every dimension
     #attention when changing: same code duplicated in Region
+    #@njit
     def get_cube(self, point):
         idx = np.array(point)
         low_corner = idx-1
-        low_corner[low_corner<0] = 0
-        high_corner = np.minimum(idx+1, np.array(self.array.shape)-1)
-        offsets = [np.array(i)
-                   for i in np.ndindex(tuple(high_corner+1-low_corner))]
+
+        # check whether we have a point on the
+        # edge of the array or an inner point
+        inner_point = not 0 in point
+        for n,i in enumerate(point):
+            inner_point *= i<self.array.shape[n]
+
+        if inner_point:
+            # use precalculated offsets
+            TODO
+        else:
+            low_corner[low_corner<0] = 0
+            high_corner = np.minimum(idx+1, np.array(self.array.shape)-1)
+            offsets = [np.array(i)
+                       for i in np.ndindex(tuple(high_corner+1-low_corner))]
+            
         return {tuple(low_corner+o) for o in offsets}
     
     #get points that are directly adjacent along the axes
@@ -334,81 +303,6 @@ class SlopeDecomposition:
                 neigh.add(new_idx)
         return neigh
 
-##    #plot 2D array in 3D projection
-##    def plot(self):
-##        assert self.array.ndim==2
-##        
-##        fig = plt.figure()
-##        ax = fig.gca(projection='3d')
-##        plt.tight_layout()
-##        plt.subplots_adjust(top = 1,
-##                            bottom = 0,
-##                            right = 1,
-##                            left = 0,
-##                            hspace = 0,
-##                            wspace = 0)
-##
-##        #plot original data as wire
-##        x = range(self.array.shape[0])
-##        y = range(self.array.shape[1])
-##        x, y = np.meshgrid(x, y)
-##        ax.plot_wireframe(x.T, y.T, self.array,
-##                          colors="k",
-##                          linewidths=0.2)
-##
-##        #plot colorful markers to indicate different regions
-##        colors = ["b", "r", "k", "c", "g", "y", "m"]
-##        markers = ["o", "x", "s", "+", "*"]
-##        for k, region in enumerate(self.regions):
-##            xs = [p[0] for p in region.points]
-##            ys = [p[1] for p in region.points]
-##            zs = [self.array[p] for p in region.points]
-##            ax.scatter(xs, ys, zs,
-##                       zdir="z",
-##                       zorder=1,
-##                       s=35,
-##                       c=colors[k%7],
-##                       marker=markers[k%5],
-##                       depthshade=False)
-##        plt.show()
-##
-##silly function only for debug
-##def plot_debug(regions, a):
-##    fig = plt.figure()
-##    ax = fig.gca(projection='3d')
-##    plt.tight_layout()
-##    plt.subplots_adjust(top = 1,
-##                        bottom = 0,
-##                        right = 1,
-##                        left = 0,
-##                        hspace = 0,
-##                        wspace = 0)
-##
-##    #plot original data as wire
-##    x = range(a.shape[0])
-##    y = range(a.shape[1])
-##    x, y = np.meshgrid(x, y)
-##    ax.plot_wireframe(x.T, y.T, a,
-##                      colors="k",
-##                      linewidths=0.2)
-##
-##    #plot colorful markers to indicate different regions
-##    colors = ["b", "r", "k", "c", "g", "y", "m"]
-##    markers = ["o", "x", "s", "+", "*", "."]
-##    for k, region in enumerate(regions):
-##        xs = [p[0] for p in region.points]
-##        ys = [p[1] for p in region.points]
-##        zs = [a[p] for p in region.points]
-##        ax.scatter(xs, ys, zs,
-##                   zdir="z",
-##                   zorder=1,
-##                   s=10,
-##                   c=colors[k%7],
-##                   marker=markers[k%5],
-##                   depthshade=False)
-##    ax.view_init(elev=40, azim=150)
-##    
-##    plt.show()
 
 
 if __name__ == "__main__":
@@ -434,18 +328,14 @@ if __name__ == "__main__":
     colors = ((0xff, 0x9f, 0x1c, alpha),
               (0xad, 0x34, 0x3e, alpha),
               (0x06, 0x7b, 0xc2, alpha),
-              (0xd3, 0x0c, 0xfa, alpha),
-              (0x0c, 0xfa, 0xfa, alpha),
-              (0x18, 0xe7, 0x2e, alpha),
-              (0x23, 0x09, 0x03, alpha),
-              (0xdb, 0x54, 0x61, alpha),
-              (0x19, 0x72, 0x78, alpha),
-              (0xee, 0x6c, 0x4d, alpha))
+              (0xd9, 0x5d, 0x39, alpha),
+              (0x2e, 0xc4, 0xb6, alpha),
+              (0x7b, 0xa8, 0x32, alpha))
     
     
     import pygame
     
-    pixelsize = 20
+    pixelsize = 12
     bordersize = 3
     screensize = (pixelsize * data.shape[0], pixelsize * data.shape[1])
     
@@ -468,7 +358,7 @@ if __name__ == "__main__":
                 if event.type == pygame.QUIT: # If user clicked close
                     done = True # Flag that we are done so we exit this loop
                 if event.type == pygame.KEYDOWN:
-                    if event.key in [pygame.K_ESCAPE, pygame.K_BACKSPACE, pygame.K_F4]:
+                    if event.key == pygame.K_ESCAPE or event.key == pygame.K_BACKSPACE:
                         done = True
                     elif event.key == pygame.K_SPACE:
                         step()
@@ -489,19 +379,19 @@ if __name__ == "__main__":
                                                  pixelsize))
             
             # 2. Draw Regions
-            for r in d.regions:
+            for i, r in enumerate(d.regions):
                 
                 region_surface.fill((0,0,0,0))
                 
                 for p in r.points:
-                    region_surface.fill(colors[r.id%len(colors)], rect = (pixelsize*p[0],
+                    region_surface.fill(colors[i%len(colors)], rect = (pixelsize*p[0],
                                                                pixelsize*p[1],
                                                                pixelsize,
                                                                pixelsize))
             
                 # 3. Draw Halos
                 for p in r.halo:
-                    region_surface.fill(colors[r.id%len(colors)], rect = (pixelsize*p[0] + bordersize,
+                    region_surface.fill(colors[i%len(colors)], rect = (pixelsize*p[0] + bordersize,
                                                                pixelsize*p[1] + bordersize,
                                                                pixelsize - 2*bordersize,
                                                                pixelsize - 2*bordersize))
@@ -511,12 +401,6 @@ if __name__ == "__main__":
             # 4. Draw current point
             
             
-            # 5. Draw all colors for debugging.
-            for i, c in enumerate(colors):
-                screen.fill(c, rect = (2*pixelsize*i,
-                                       0,
-                                       2*pixelsize,
-                                       2*pixelsize))
             
             
             
