@@ -17,6 +17,7 @@ class Region:
         self.edge = set()   #border, belonging to the region
         self.halo = set()   #border, not (yet) part of the region
         self.add(point)
+        self.id = len(decomp.regions)
 
     def __repr__(self):
         return str(self.points)
@@ -268,7 +269,7 @@ class SlopeDecomposition:
     
     @property
     def regions(self):
-        return self.active_regions + self.passive_regions
+        return self.passive_regions + self.active_regions
 
     def __len__(self):
         return len(self.regions)
@@ -420,14 +421,18 @@ if __name__ == "__main__":
     colors = ((0xff, 0x9f, 0x1c, alpha),
               (0xad, 0x34, 0x3e, alpha),
               (0x06, 0x7b, 0xc2, alpha),
-              (0xd9, 0x5d, 0x39, alpha),
-              (0x2e, 0xc4, 0xb6, alpha),
-              (0x7b, 0xa8, 0x32, alpha))
+              (0xd3, 0x0c, 0xfa, alpha),
+              (0x0c, 0xfa, 0xfa, alpha),
+              (0x18, 0xe7, 0x2e, alpha),
+              (0x23, 0x09, 0x03, alpha),
+              (0xdb, 0x54, 0x61, alpha),
+              (0x19, 0x72, 0x78, alpha),
+              (0xee, 0x6c, 0x4d, alpha))
     
     
     import pygame
     
-    pixelsize = 12
+    pixelsize = 20
     bordersize = 3
     screensize = (pixelsize * data.shape[0], pixelsize * data.shape[1])
     
@@ -450,7 +455,7 @@ if __name__ == "__main__":
                 if event.type == pygame.QUIT: # If user clicked close
                     done = True # Flag that we are done so we exit this loop
                 if event.type == pygame.KEYDOWN:
-                    if event.key == pygame.K_ESCAPE or event.key == pygame.K_BACKSPACE:
+                    if event.key in [pygame.K_ESCAPE, pygame.K_BACKSPACE, pygame.K_F4]:
                         done = True
                     elif event.key == pygame.K_SPACE:
                         step()
@@ -471,19 +476,19 @@ if __name__ == "__main__":
                                                  pixelsize))
             
             # 2. Draw Regions
-            for i, r in enumerate(d.regions):
+            for r in d.regions:
                 
                 region_surface.fill((0,0,0,0))
                 
                 for p in r.points:
-                    region_surface.fill(colors[i%len(colors)], rect = (pixelsize*p[0],
+                    region_surface.fill(colors[r.id%len(colors)], rect = (pixelsize*p[0],
                                                                pixelsize*p[1],
                                                                pixelsize,
                                                                pixelsize))
             
                 # 3. Draw Halos
                 for p in r.halo:
-                    region_surface.fill(colors[i%len(colors)], rect = (pixelsize*p[0] + bordersize,
+                    region_surface.fill(colors[r.id%len(colors)], rect = (pixelsize*p[0] + bordersize,
                                                                pixelsize*p[1] + bordersize,
                                                                pixelsize - 2*bordersize,
                                                                pixelsize - 2*bordersize))
@@ -493,6 +498,12 @@ if __name__ == "__main__":
             # 4. Draw current point
             
             
+            # 5. Draw all colors for debugging.
+            for i, c in enumerate(colors):
+                screen.fill(c, rect = (2*pixelsize*i,
+                                       0,
+                                       2*pixelsize,
+                                       2*pixelsize))
             
             
             
