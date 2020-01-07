@@ -5,17 +5,18 @@ from PIL import Image
 from copy import copy
 from tqdm import tqdm
 #from numba import jit, njit
+import itertools
 
 class Region:
 
     def __init__(self, point, decomp):
         self.decomp = decomp
-        self.min_idx = point
-        self.max_idx = None
-        self.sad_idx = set() #needn't be a point in the region!
+#        self.min_idx = point
+#        self.max_idx = None
+#        self.sad_idx = set() #needn't be a point in the region!
         self.active = True
         self.points = set() #points, both inner and on the edge
-        self.edge = set()   #border, belonging to the region
+#        self.edge = set()   #border, belonging to the region
         self.halo = set()   #border, not (yet) part of the region
         self.add(point)
         self.id = len(decomp.regions)
@@ -40,17 +41,17 @@ class Region:
         self.halo.update(new_halo)
         self.halo.discard(point)
         
-        self.edge.add(point)
-        for ned in neigh.intersection(self.edge):
-            if self.decomp.get_neigh(ned).issubset(self.points):
-                self.edge.remove(ned)
+#        self.edge.add(point)
+#        for ned in neigh.intersection(self.edge):
+#            if self.decomp.get_neigh(ned).issubset(self.points):
+#                self.edge.remove(ned)
 
-        #TODO this is wrong
-        if not new_halo:
-            #we found a maximum
-            self.max_idx = point
-            self.edge.difference_update(neigh)
-            #self.passivate()
+#        #TODO this is wrong
+#        if not new_halo:
+#            #we found a maximum
+#            self.max_idx = point
+##            self.edge.difference_update(neigh)
+#            #self.passivate()
         
         
     def passivate(self):
@@ -64,6 +65,12 @@ class SlopeDecomposition:
         assert array.ndim > 1
         
         self.array = array
+        
+        #for use in get_cube
+        self.shape_m_1 = np.array(array.shape) - 1
+        self.dim = len(array.shape)
+        self.offset_array = np.array(list(itertools.product(range(-1,2), repeat = self.dim)))
+        
         self.active_regions = []
         self.passive_regions = []
         
@@ -98,30 +105,9 @@ class SlopeDecomposition:
                " "+str(self.array.dtype)+" array into "+\
                str(len(self))+" slope regions."
         
+        
     def decompose(self):
-        
-#        debug_lvl_stop = 0
-        
         for lvl, points in (self.levelsets_sorted):
-            
-#            print(f"""
-#            Doing level: {lvl}
-#            Active Regions: {len(self.active_regions)}
-#            Points in Lvlset: {len(points)}   
-#            """)
-#            
-#            if lvl >= debug_lvl_stop:
-#                i = input()
-#                if i == "stop":
-#                    return
-#                elif i.isdecimal():
-#                    debug_lvl_stop = int(i)
-#                elif i == "plot":
-#                    self.plot()
-            
-            if lvl > 130:
-                break
-            
             self.decomposeStep(lvl, points)
             
     
@@ -129,6 +115,7 @@ class SlopeDecomposition:
         for lvl, points in (self.levelsets_sorted):
             self.decomposeStep(lvl, points)
             yield lvl 
+    
     
     def decomposeStep(self, lvl, points):
   
@@ -149,7 +136,7 @@ class SlopeDecomposition:
                     
                         if len(self.find_connected_components(local_env, local_env)) > 1:
                             # test global connectedness now
-                            print("beep boop")
+#                            print("beep boop")
                             components = self.find_connected_components(local_env, self.unassigned_points)
                             components = sorted(components, key = len, reverse=True)
                         else:
@@ -212,10 +199,12 @@ class SlopeDecomposition:
                             # if we get more than one component, there
                             # was a self-collision and we need to create
                             # additional regions for the new components
-                            h_compo = self.find_connected_components(r.halo, self.unassigned_points)
-                            compo_and_halo += [(c, r.halo.intersection(c)) for c in h_compo[1:]]
-                            r.halo.intersection_update(h_compo[0])
-                            
+                            # if the halo is empty however, we don't have to do anything.
+                            if r.halo:
+                                h_compo = self.find_connected_components(r.halo, self.unassigned_points)
+                                compo_and_halo += [(c, r.halo.intersection(c)) for c in h_compo[1:]]
+                                r.halo.intersection_update(h_compo[0])
+                                
                     active_points = points.intersection(region.halo, self.unassigned_points)
                     
                 if not region.active:
@@ -275,25 +264,29 @@ class SlopeDecomposition:
     #@njit
     def get_cube(self, point):
         idx = np.array(point)
-        low_corner = idx-1
-
+        
         # check whether we have a point on the
         # edge of the array or an inner point
-        inner_point = not 0 in point
-        for n,i in enumerate(point):
-            inner_point *= i<self.array.shape[n]
-
-        if inner_point:
+#        inner_point = not 0 in point
+#        for n,i in enumerate(point):
+#            inner_point *= i<self.array.shape[n]
+        
+#        inner_point = not(np.any(point == 0) or np.any(point == self.shape_m_1))
+        
+#        if True or inner_point :
             # use precalculated offsets
-            TODO
-        else:
-            low_corner[low_corner<0] = 0
-            high_corner = np.minimum(idx+1, np.array(self.array.shape)-1)
-            offsets = [np.array(i)
-                       for i in np.ndindex(tuple(high_corner+1-low_corner))]
-            
-        return {tuple(low_corner+o) for o in offsets}
-    
+            # TODO
+        return {tuple(p) for p in self.offset_array + idx}
+#        else:
+##            low_corner = idx-1
+##            low_corner[low_corner<0] = 0
+#            low_corner = np.maximum(idx - 1, 0)
+#            high_corner = np.minimum(idx + 1, self.shape_m_1)
+#            offsets = [np.array(i)
+#                       for i in np.ndindex(tuple(high_corner+1-low_corner))]
+#            
+#            return {tuple(low_corner+o) for o in offsets}
+#    
     #get points that are directly adjacent along the axes
     #attention when changing: same code duplicated in Region
     def get_neigh(self, point):
@@ -310,121 +303,151 @@ class SlopeDecomposition:
 if __name__ == "__main__":
     
     
+    profiling_mode = True
+    
     #dummy data for debug
     #d = np.round(10*np.random.rand(6,6)).astype(np.int)
+#    pic = Image.open("brain.png")
     pic = Image.open("perlin_small.png")
+#    pic = Image.open("mediumTestImage.png")
     data = np.array(pic)[..., 1]
     d=SlopeDecomposition(data)
     #d.plot()
-    #d.decompose()
     
-    gen = d.doDecomposeStep()
-    def step():
+    if profiling_mode:
+        d.decompose()
+    else:
+        
+        steps = 0
+           
+        gen = d.doDecomposeStep()
+        def step():
+            try:
+                gen.__next__()
+            except StopIteration:
+                pass
+                
+                
+        
+        alpha = 128
+            
+        colors = ((0xff, 0x9f, 0x1c, alpha),
+                  (0xad, 0x34, 0x3e, alpha),
+                  (0x06, 0x7b, 0xc2, alpha),
+                  (0xd3, 0x0c, 0xfa, alpha),
+                  (0x0c, 0xfa, 0xfa, alpha),
+                  (0x18, 0xe7, 0x2e, alpha),
+                  (0x23, 0x09, 0x03, alpha),
+                  (0xdb, 0x54, 0x61, alpha),
+                  (0x19, 0x72, 0x78, alpha),
+                  (0xee, 0x6c, 0x4d, alpha))
+        
+        
+        import pygame
+        
+        print_debug_colors = False
+        
+        pixelsize = 5
+        
+        pygame.init()
+        pygame.display.set_caption("Border Propagation")
+        clock = pygame.time.Clock()
+        
+        def screeninit():
+            global screen, region_surface, bordersize
+
+            bordersize = pixelsize//3
+            screensize = (pixelsize * data.shape[0], pixelsize * data.shape[1])
+
+            screen = pygame.display.set_mode(screensize)
+            
+            region_surface = pygame.Surface(screensize, flags = pygame.SRCALPHA)
+            region_surface.set_alpha(alpha)
+            
+        screeninit()
+        
         try:
-            gen.__next__()
-        except StopIteration:
-            pass
-    
-    
-    alpha = 128
-        
-    colors = ((0xff, 0x9f, 0x1c, alpha),
-              (0xad, 0x34, 0x3e, alpha),
-              (0x06, 0x7b, 0xc2, alpha),
-              (0xd3, 0x0c, 0xfa, alpha),
-              (0x0c, 0xfa, 0xfa, alpha),
-              (0x18, 0xe7, 0x2e, alpha),
-              (0x23, 0x09, 0x03, alpha),
-              (0xdb, 0x54, 0x61, alpha),
-              (0x19, 0x72, 0x78, alpha),
-              (0xee, 0x6c, 0x4d, alpha))
-    
-    
-    import pygame
-    
-    pixelsize = 5
-    bordersize = 2
-    screensize = (pixelsize * data.shape[0], pixelsize * data.shape[1])
-    
-    
-    
-    pygame.init()
-    screen = pygame.display.set_mode(screensize)
-    pygame.display.set_caption("Border Propagation")
-    clock = pygame.time.Clock()
-    
-    region_surface = pygame.Surface(screensize, flags = pygame.SRCALPHA)
-    region_surface.set_alpha(alpha)
-       
-    try:
-        
-        done = False
-        while (not done):
-            # --- Main event loop
-            for event in pygame.event.get(): # User did something
-                if event.type == pygame.QUIT: # If user clicked close
-                    done = True # Flag that we are done so we exit this loop
-                if event.type == pygame.KEYDOWN:
-                    if event.key in [pygame.K_ESCAPE, pygame.K_BACKSPACE, pygame.K_F4]:
-                        done = True
-                    elif event.key == pygame.K_SPACE:
-                        step()
-                    elif event.key == pygame.K_RIGHT:
-                        for _ in tqdm(range(10)):
-                            step()
-                    elif event.key == pygame.K_UP:
-                        for _ in tqdm(range(100)):
-                            step()
             
-            
-            # 1. Draw data
-            for i in range(data.shape[0]):
-                for j, v in enumerate(data[i]):
-                    screen.fill((v,v,v), rect = (pixelsize*i,
-                                                 pixelsize*j,
-                                                 pixelsize,
-                                                 pixelsize))
-            
-            # 2. Draw Regions
-            for r in d.regions:
+            done = False
+            while (not done):
+                # --- Main event loop
+                for event in pygame.event.get(): # User did something
+                    if event.type == pygame.QUIT: # If user clicked close
+                        done = True # Flag that we are done so we exit this loop
+                    if event.type == pygame.KEYDOWN:
+                        if event.key in [pygame.K_ESCAPE, pygame.K_BACKSPACE, pygame.K_F4]:
+                            done = True
+                        elif event.key == pygame.K_SPACE:
+                            steps += 1
+                        elif event.key == pygame.K_RIGHT:
+                            steps += 10
+                        elif event.key == pygame.K_UP:
+                            steps += 256
+                        elif event.key == pygame.K_DOWN:
+                            steps = 0
+                        elif event.key == pygame.K_F5:
+                            print_debug_colors = not print_debug_colors
+                        elif event.key == pygame.K_KP_PLUS:
+                            pixelsize += 1
+                            screeninit()
+                        elif event.key == pygame.K_KP_MINUS:
+                            pixelsize -= 1 * (pixelsize > 1)
+                            screeninit()
+                        
+                if steps > 0:
+                    steps -= 1
+                    step()
                 
-                region_surface.fill((0,0,0,0))
                 
-                for p in r.points:
-                    region_surface.fill(colors[r.id%len(colors)], rect = (pixelsize*p[0],
-                                                               pixelsize*p[1],
-                                                               pixelsize,
-                                                               pixelsize))
-            
-                # 3. Draw Halos
-                for p in r.halo:
-                    region_surface.fill(colors[r.id%len(colors)], rect = (pixelsize*p[0] + bordersize,
-                                                               pixelsize*p[1] + bordersize,
-                                                               pixelsize - 2*bordersize,
-                                                               pixelsize - 2*bordersize))
-            
-                screen.blit(region_surface, (0,0))
-            
-            # 4. Draw current point
-            
-            
-            # 5. Draw all colors for debugging.
-            for i, c in enumerate(colors):
-                screen.fill(c, rect = (2*pixelsize*i,
-                                       0,
-                                       2*pixelsize,
-                                       2*pixelsize))
-            
-            
-            
-            
-            
-            
-            pygame.display.flip()
-            
-            clock.tick(60)
-    
-    finally:    
-        pygame.quit()
-    
-    
+                # 1. Draw data
+                for i in range(data.shape[0]):
+                    for j, v in enumerate(data[i]):
+                        screen.fill((v,v,v), rect = (pixelsize*i,
+                                                     pixelsize*j,
+                                                     pixelsize,
+                                                     pixelsize))
+                
+                # 2. Draw Regions
+                for r in d.regions:
+                    
+                    region_surface.fill((0,0,0,0))
+                    
+                    for p in r.points:
+                        region_surface.fill(colors[r.id%len(colors)], rect = (pixelsize*p[0],
+                                                                   pixelsize*p[1],
+                                                                   pixelsize,
+                                                                   pixelsize))
+                
+                    # 3. Draw Halos
+                    for p in r.halo:
+                        region_surface.fill(colors[r.id%len(colors)], rect = (pixelsize*p[0] + bordersize,
+                                                                   pixelsize*p[1] + bordersize,
+                                                                   pixelsize - 2*bordersize,
+                                                                   pixelsize - 2*bordersize))
+                
+                    screen.blit(region_surface, (0,0))
+                
+                # 4. Draw current point
+                
+                
+                # 5. Draw all colors for debugging.
+                if print_debug_colors:
+                    for i, c in enumerate(colors):
+                        screen.fill(c, rect = (2*pixelsize*i,
+                                               0,
+                                               2*pixelsize,
+                                               2*pixelsize))
+                
+                
+                
+                
+                
+                
+                pygame.display.flip()
+                
+                clock.tick(60)
+        
+        finally:    
+            pygame.quit()
+        
+        
