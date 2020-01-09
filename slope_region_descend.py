@@ -303,7 +303,7 @@ class SlopeDecomposition:
 if __name__ == "__main__":
     
     
-    profiling_mode = True
+    profiling_mode = False
     
     #dummy data for debug
     #d = np.round(10*np.random.rand(6,6)).astype(np.int)
@@ -311,6 +311,7 @@ if __name__ == "__main__":
     pic = Image.open("perlin_small.png")
 #    pic = Image.open("mediumTestImage.png")
     data = np.array(pic)[..., 1]
+#    data = 255-data
     d=SlopeDecomposition(data)
     #d.plot()
     
@@ -449,5 +450,17 @@ if __name__ == "__main__":
         
         finally:    
             pygame.quit()
+        
+        
+        
+        # Note: Reeb-Graphs
+        # Countour Tree
+        # Maximally Stable Extremal Refions
+        # Watershed
+        
+        # create monkey_saddle.png
+        
+        
+        
         
         
