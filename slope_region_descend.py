@@ -37,7 +37,7 @@ class Region:
     def add(self, point):
         assert point not in self.points
         self.points.add(point)
-        decomp.unassigned_points.remove(point)
+        self.decomp.unassigned_points.remove(point)
 
         neigh = self.decomp.get_neigh(point)
         new_halo = neigh.difference(self.points)
@@ -229,7 +229,7 @@ class SlopeDecomposition:
         while remaining_points:
             point = remaining_points.pop()
             region = Region(point, self)
-            self.unassigned_points.remove(point)
+            #self.unassigned_points.remove(point)
             new_regions.append(region)
 
             #now fill the new region as much as possible
@@ -238,7 +238,7 @@ class SlopeDecomposition:
                 for point in active_points:
                     #TODO test for self-collision
                     region.add(point)
-                    self.unassigned_points.remove(point)
+                    #self.unassigned_points.remove(point)
                 active_points = remaining_points.intersection(region.halo)
 
             #and update which points are left now
