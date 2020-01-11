@@ -1,11 +1,8 @@
+import itertools
 import numpy as np
-#import matplotlib.pyplot as plt
-#from mpl_toolkits.mplot3d import Axes3D
 from PIL import Image
 from copy import copy
-from tqdm import tqdm
-#from numba import jit, njit
-import itertools
+#from tqdm import tqdm
 
 class Region:
 
@@ -40,23 +37,11 @@ class Region:
         self.decomp.unassigned_points.remove(point)
 
         neigh = self.decomp.get_neigh(point)
-        new_halo = neigh.difference(self.points)
+        new_halo = neigh - self.points
+        new_halo &= self.decomp.unassigned_points
 
-        self.halo.update(new_halo)
+        self.halo |= new_halo
         self.halo.discard(point)
-
-#        self.edge.add(point)
-#        for ned in neigh.intersection(self.edge):
-#            if self.decomp.get_neigh(ned).issubset(self.points):
-#                self.edge.remove(ned)
-
-#        #TODO this is wrong
-#        if not new_halo:
-#            #we found a maximum
-#            self.max_idx = point
-##            self.edge.difference_update(neigh)
-#            #self.passivate()
-
 
 
 
@@ -76,15 +61,16 @@ class SlopeDecomposition:
 
     def __init__(self, array):
         assert array.ndim > 1
-
-        self.array = array
+        
+        # for use in get_neigh
+        self.a_shape = array.shape
 
         # for use in get_cube
-        #self.shape_m_1 = np.array(array.shape) - 1
         self.dim = len(array.shape)
         self.offset_array = itertools.product(range(-1,2), repeat = self.dim)
         self.offset_array = np.array(list(self.offset_array))
-
+        
+        # keep track of active and passive regions
         self.active_regions = []
         self.passive_regions = []
 
@@ -108,38 +94,54 @@ class SlopeDecomposition:
 
         #self.decompose()
 
+    # get points with index varying at most by 1 in every dimension
+    # this might produce out-of-bounds indices, beware!
+    def get_cube(self, point):
+        return {tuple(p) for p in self.offset_array + np.array(point)}
+
+    # get points that are directly adjacent along the axes
+    def get_neigh(self, point):
+        neigh = set()
+        for dim, len in enumerate(self.a_shape):
+            pos = point[dim]
+            for k in [max(0, pos-1), pos, min(len-1, pos+1)]:
+                new_idx = tuple(p if i!=dim else k
+                                for i,p in enumerate(point))
+                neigh.add(new_idx)
+        return neigh
 
     def decompose(self):
         for lvl, points in (self.levelsets_sorted):
             self.decomposeStep(lvl, points)
-
 
     def doDecomposeStep(self):
         for lvl, points in (self.levelsets_sorted):
             self.decomposeStep(lvl, points)
             yield lvl
 
-
     def decomposeStep(self, lvl, points):
-
         # first off, deal with points that can be assigned to existing regions
-        while any([r.halo.intersection(points, self.unassigned_points) for r in self.active_regions]):
+        while any([r.halo & points for r in self.active_regions]):
+            # make sure the halos consist only of unassigned points
+            for r in self.regions:
+                r.halo &= self.unassigned_points
+                
             for region in self.active_regions:
-                active_points = points.intersection(region.halo, self.unassigned_points)
+                active_points = points & region.halo
 
                 while active_points:
                     point = active_points.pop()
                     region.add(point)
-                    #self.unassigned_points.remove(point) #in region.add() now!
 
                     # test local connectedness around point as fast heuristic
-                    local_env = self.get_cube(point).intersection(self.unassigned_points)
+                    local_env = self.get_cube(point) & self.unassigned_points
 
                     if local_env: #TODO: is there really nothing to do otherwise?
 
                         if len(self.find_connected_components(local_env, local_env)) > 1:
                             # test global connectedness now
-                            #TODO: look at these cases, whether we can do another cheap test
+                            #TODO: look at these cases, whether we can do another cheap test.
+                            #perhaps a larger local region?
                             components = self.find_connected_components(local_env, self.unassigned_points)
                             
                             # sort components, biggest chunk of unassigned points in front
@@ -154,10 +156,9 @@ class SlopeDecomposition:
                         # union of halos of involved regions
                         involved_halos = set()
                         for r in involved_regions:
-                            involved_halos.update(r.halo)
-                        involved_halos.intersection_update(self.unassigned_points)
+                            involved_halos |= r.halo
 
-                        halo_components = [involved_halos.intersection(c) for c in components]
+                        halo_components = [involved_halos & c for c in components]
 
                         compo_and_halo = list(zip(components, halo_components))
 
@@ -171,17 +172,17 @@ class SlopeDecomposition:
                             # then assign a halo component to the region
                             # the "copy" here is needed for correct iteration
                             for c, h in copy(compo_and_halo):
-                                if old_halo.intersection(h):
+                                if old_halo & h:
                                     # this halo component is on the border of r,
                                     # and can therefor be assigned to r.
                                     
-                                    is_plateau = c.issubset(points)
+                                    is_plateau = c<=points
                                     if is_plateau or not found_halo:
                                         # we can add the current component, if
                                         # it is a plateau or if we haven't found
                                         # a halo for the region yet.
                                         
-                                        r.halo.update(h)
+                                        r.halo |= h
                                         compo_and_halo.remove((c,h))
                                         if not is_plateau:
                                             # in this case we just found a halo
@@ -197,14 +198,11 @@ class SlopeDecomposition:
                             c,h = compo_and_halo.pop()
                             point = h.pop()
                             r = Region(point, self)
-                            #self.unassigned_points.remove(point)
                             self.active_regions.append(r)
 
                             # add the whole halo component to the region
                             for p in h:
                                 r.add(p)
-                                #self.unassigned_points.remove(p)
-                            r.halo.intersection_update(self.unassigned_points)
 
                             # now look at the connected components of
                             # the region halo in the unassigned points.
@@ -214,46 +212,42 @@ class SlopeDecomposition:
                             # if the halo is empty however, we don't have to do anything.
                             if r.halo:
                                 h_compo = self.find_connected_components(r.halo, self.unassigned_points)
-                                compo_and_halo += [(c, r.halo.intersection(c)) for c in h_compo[1:]]
-                                r.halo.intersection_update(h_compo[0])
+                                compo_and_halo += [(c, r.halo & c) for c in h_compo[1:]]
+                                r.halo &= h_compo[0]
 
-                    active_points = points.intersection(region.halo, self.unassigned_points)
+                    active_points = points & region.halo
 
                 if not region.active:
                     self.passive_regions.append(region)
                     self.active_regions.remove(region)
 
-        #then look at remaining points and create new regions as necessary
+        # then look at remaining points and create new regions as necessary
+        #TODO: think of a better way to deal with remaining points
+        #we want to do similar stuff to the "while compo_and_halo" loop above.
         new_regions = []
         remaining_points = points.intersection(self.unassigned_points)
         while remaining_points:
             point = remaining_points.pop()
             region = Region(point, self)
-            #self.unassigned_points.remove(point)
             new_regions.append(region)
 
-            #now fill the new region as much as possible
+            # now fill the new region as much as possible
             active_points = remaining_points.intersection(region.halo)
             while active_points:
                 for point in active_points:
                     #TODO test for self-collision
                     region.add(point)
-                    #self.unassigned_points.remove(point)
                 active_points = remaining_points.intersection(region.halo)
 
-            #and update which points are left now
+            # and update which points are left now
             remaining_points = points.intersection(self.unassigned_points)
 
         self.active_regions += new_regions
 
-        # cut away parts of the halos which are already assigned
-        for region in self.regions:
-            region.halo.intersection_update(self.unassigned_points)
-
 
     def find_connected_components(self, small_set, big_set):
-        assert small_set.issubset(big_set)
-        assert len(small_set) != 0
+        assert small_set <= big_set
+        assert small_set
 
         small_set_copy = copy(small_set)
 
@@ -263,52 +257,13 @@ class SlopeDecomposition:
             border = {seed}
             component = set()
             while border:
+                #TODO: implement A* search and break as soon as there's only one component
                 point = border.pop()
                 component.add(point)
-                border.update(self.get_cube(point).intersection(big_set).difference(component))
+                border |= (self.get_cube(point) & big_set) - component
             components.append(component)
-            small_set_copy.difference_update(component)
+            small_set_copy -= component
         return components
-
-
-    #get points with index varying at most by 1 in every dimension
-    #attention when changing: same code duplicated in Region
-    #@njit
-    def get_cube(self, point):
-        idx = np.array(point)
-
-        # check whether we have a point on the
-        # edge of the array or an inner point
-#        inner_point = not 0 in point
-#        for n,i in enumerate(point):
-#            inner_point *= i<self.array.shape[n]
-
-#        inner_point = not(np.any(point == 0) or np.any(point == self.shape_m_1))
-
-#        if True or inner_point :
-            # use precalculated offsets
-            # TODO
-        return {tuple(p) for p in self.offset_array + idx}
-#        else:
-##            low_corner = idx-1
-##            low_corner[low_corner<0] = 0
-#            low_corner = np.maximum(idx - 1, 0)
-#            high_corner = np.minimum(idx + 1, self.shape_m_1)
-#            offsets = [np.array(i)
-#                       for i in np.ndindex(tuple(high_corner+1-low_corner))]
-#
-#            return {tuple(low_corner+o) for o in offsets}
-#
-    #get points that are directly adjacent along the axes
-    #attention when changing: same code duplicated in Region
-    def get_neigh(self, point):
-        neigh = set()
-        for dim, len in enumerate(self.array.shape):
-            pos = point[dim]
-            for k in [max(0, pos-1), pos, min(len-1, pos+1)]:
-                new_idx = tuple(p if i!=dim else k for i,p in enumerate(point))
-                neigh.add(new_idx)
-        return neigh
 
 
 
@@ -325,7 +280,6 @@ if __name__ == "__main__":
     data = np.array(pic)[..., 1]
 #    data = 255-data
     d=SlopeDecomposition(data)
-    #d.plot()
 
     if profiling_mode:
         d.decompose()
@@ -367,6 +321,7 @@ if __name__ == "__main__":
         clock = pygame.time.Clock()
 
         def screeninit():
+            #TODO 3D render
             global screen, region_surface, bordersize
 
             bordersize = pixelsize//3
@@ -467,7 +422,7 @@ if __name__ == "__main__":
 
         # Note: Reeb-Graphs
         # Countour Tree
-        # Maximally Stable Extremal Refions
+        # Maximally Stable Extremal Regions
         # Watershed
 
         # create monkey_saddle.png
