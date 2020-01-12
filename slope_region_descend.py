@@ -6,7 +6,7 @@ from copy import copy
 
 class Region:
 
-    def __init__(self, point, decomp):
+    def __init__(self, decomp):
         self.decomp = decomp
 #        self.min_idx = point
 #        self.max_idx = None
@@ -15,7 +15,7 @@ class Region:
         self.points = set() #points, both inner and on the edge
 #        self.edge = set()   #border, belonging to the region
         self.halo = set()   #border, not (yet) part of the region
-        self.add(point)
+#        self.add(point)
         self.id = len(decomp.regions)
 
     def __repr__(self):
@@ -200,13 +200,15 @@ class SlopeDecomposition:
                             # grab a point from a remaining halo,
                             # and start a region from there.
                             c,h = compo_and_halo.pop()
-                            point = h.pop()
-                            r = Region(point, self)
+##                            point = h.pop()
+                            r = Region(self)
+##                            region.add(point)
                             self.active_regions.append(r)
 
-                            # add the whole halo component to the region
-                            for p in h:
-                                r.add(p)
+##                            # add the whole halo component to the region
+##                            for p in h:
+##                                r.add(p)
+                            r.halo = h
 
                             # now look at the connected components of
                             # the region halo in the unassigned points.
@@ -235,7 +237,8 @@ class SlopeDecomposition:
 
         while remaining_components:
             component = remaining_components.pop()
-            region = Region(component.pop(), self)
+            region = Region(self)
+            region.add(component.pop())
             self.active_regions.append(region)
 
             # we can add the entire component to the
@@ -261,13 +264,15 @@ class SlopeDecomposition:
                         components = sorted(components, key = len, reverse=True)
 
                     if len(components) > 1: # else there is nothing to do
+                        total_halo = region.halo
+                        
                         # assign biggest halo to the region
                         region.halo &= components[0]
                         
-                        # also grow the region there instantly
-                        for p in region.halo & points:
-                            region.add(p)
-                            component.remove(p)
+##                        # also grow the region there instantly
+##                        for p in region.halo & points:
+##                            region.add(p)
+##                            component.remove(p)
 
                         # assign plateaus to the region,
                         # other halo components get added to remaining_components
@@ -277,8 +282,11 @@ class SlopeDecomposition:
                                 for p in c:
                                     region.add(p)
                             else:
-                                remaining_components.append(c & points)
-                                #TODO remember info about halo for this region
+##                                remaining_components.append(c & points)
+##                                #TODO remember info about halo for this region
+                                new_region = Region()
+                                new_region.halo = c & points
+                                self.active_regions.append(new_region)
 
                             component -= c
 
