@@ -61,6 +61,7 @@ class SlopeDecomposition:
 
     def __init__(self, array):
         assert array.ndim > 1
+        self.ö = 0
         
         # for use in get_neigh
         self.a_shape = array.shape
@@ -69,6 +70,8 @@ class SlopeDecomposition:
         self.dim = len(array.shape)
         self.offset_array = itertools.product(range(-1,2), repeat = self.dim)
         self.offset_array = np.array(list(self.offset_array))
+        self.offset_array_l = itertools.product(range(-3,4), repeat = self.dim)
+        self.offset_array_l = np.array(list(self.offset_array_l))
         
         # keep track of active and passive regions
         self.active_regions = []
@@ -137,17 +140,17 @@ class SlopeDecomposition:
                     local_env = self.get_cube(point) & self.unassigned_points
 
                     if local_env: #TODO: is there really nothing to do otherwise?
+                        components = [self.unassigned_points]
 
                         if len(self.find_connected_components(local_env, local_env)) > 1:
                             # test global connectedness now
                             #TODO: look at these cases, whether we can do another cheap test.
-                            #perhaps a larger local region?
+                            self.ö += 1
+                            print("global test no", self.ö)
                             components = self.find_connected_components(local_env, self.unassigned_points)
                             
                             # sort components, biggest chunk of unassigned points in front
                             components = sorted(components, key = len, reverse=True)
-                        else:
-                            components = [self.unassigned_points]
 
                         # list of all the regions with point in their halo
                         involved_regions = [region] + [r for r in self.active_regions
@@ -222,27 +225,100 @@ class SlopeDecomposition:
                     self.active_regions.remove(region)
 
         # then look at remaining points and create new regions as necessary
-        #TODO: think of a better way to deal with remaining points
-        #we want to do similar stuff to the "while compo_and_halo" loop above.
-        new_regions = []
-        remaining_points = points.intersection(self.unassigned_points)
-        while remaining_points:
-            point = remaining_points.pop()
-            region = Region(point, self)
-            new_regions.append(region)
+        remaining_points = points & self.unassigned_points
+        if remaining_points:
+            remaining_components = self.find_connected_components(remaining_points,
+                                                                  remaining_points)
+        else:
+            remaining_components = []
 
-            # now fill the new region as much as possible
-            active_points = remaining_points.intersection(region.halo)
-            while active_points:
-                for point in active_points:
-                    #TODO test for self-collision
-                    region.add(point)
-                active_points = remaining_points.intersection(region.halo)
+        while remaining_components:
+            component = remaining_components.pop()
+            region = Region(component.pop(), self)
+            self.active_regions.append(region)
 
-            # and update which points are left now
-            remaining_points = points.intersection(self.unassigned_points)
+            # we can add the entire component to the
+            # region, but we need to test for self-collision
+            while component:
+                point = component.pop()
+                region.add(point)
 
-        self.active_regions += new_regions
+                # test local connectedness around point as fast heuristic
+                local_env = self.get_cube(point) & self.unassigned_points
+
+                if local_env: #TODO: is there really nothing to do otherwise?
+                    components = [self.unassigned_points]
+
+                    if len(self.find_connected_components(local_env, local_env)) > 1:
+                        # test global connectedness now
+                        #TODO: look at these cases, whether we can do another cheap test.
+                        self.ö += 1
+                        print("global test 2 no", self.ö)
+                        components = self.find_connected_components(local_env, self.unassigned_points)
+                        
+                        # sort components, biggest chunk of unassigned points in front
+                        components = sorted(components, key = len, reverse=True)
+
+                    if len(components) > 1: # else there is nothing to do
+                        # assign biggest halo to the region
+                        region.halo &= components[0]
+
+                        # assign plateaus to the region,
+                        # other halo components get added to remaining_components
+                        for c in components[1:]:
+                            if c<=points:
+                                # plateau
+                                for p in c & points:
+                                    region.add(p)
+                            else:
+                                remaining_components.append(c & points)
+
+                            component -= c
+
+
+
+
+
+
+
+        
+##        while remaining_points:
+##            point = remaining_points.pop()
+##            region = Region(point, self)
+##            self.active_regions.append(region)
+##
+##            # now fill the new region as much as possible
+##            active_points = remaining_points.intersection(region.halo)
+##            while active_points:
+##                for point in active_points:
+##                    region.add(point)
+##
+##                    # test local connectedness around point as fast heuristic
+##                    local_env = self.get_cube(point) & self.unassigned_points
+##
+##                    if local_env: #TODO: is there really nothing to do otherwise?
+##                        components = [self.unassigned_points]
+##
+##                        if len(self.find_connected_components(local_env, local_env)) > 1:
+##                            # test global connectedness now
+##                            #TODO: look at these cases, whether we can do another cheap test.
+##                            self.ö += 1
+##                            print("global test no", self.ö)
+##                            components = self.find_connected_components(local_env, self.unassigned_points)
+##                            
+##                            # sort components, biggest chunk of unassigned points in front
+##                            components = sorted(components, key = len, reverse=True)
+##
+##                            # assign biggest halo to the region
+##                            region.halo = components[0]
+##
+##                            #TODO rewrite this whole part as a "while"
+##                            #iteration over the remaining unassigned points components
+##                            
+##                active_points = remaining_points & region.halo
+##
+##            # and update which points are left now
+##            remaining_points &= self.unassigned_points
 
 
     def find_connected_components(self, small_set, big_set):
@@ -278,7 +354,7 @@ if __name__ == "__main__":
     pic = Image.open("perlin_small.png")
 #    pic = Image.open("mediumTestImage.png")
     data = np.array(pic)[..., 1]
-#    data = 255-data
+    data = 255-data
     d=SlopeDecomposition(data)
 
     if profiling_mode:
