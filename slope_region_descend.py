@@ -380,17 +380,6 @@ if __name__ == "__main__":
 
 
         alpha = 128
-
-#        colors = ((0xff, 0x9f, 0x1c, alpha),
-#                  (0xad, 0x34, 0x3e, alpha),
-#                  (0x06, 0x7b, 0xc2, alpha),
-#                  (0xd3, 0x0c, 0xfa, alpha),
-#                  (0x0c, 0xfa, 0xfa, alpha),
-#                  (0x18, 0xe7, 0x2e, alpha),
-#                  (0x23, 0x09, 0x03, alpha),
-#                  (0xdb, 0x54, 0x61, alpha),
-#                  (0x19, 0x72, 0x78, alpha),
-#                  (0xee, 0x6c, 0x4d, alpha))
         
         import colorsys
         
@@ -403,7 +392,11 @@ if __name__ == "__main__":
         import pygame
 
         print_debug_colors = False
-
+        
+        iso_line_debug_view = False
+        iso_line_every = 20
+        iso_line_offset = 0
+        
         pixelsize = 5
 
         pygame.init()
@@ -451,6 +444,17 @@ if __name__ == "__main__":
                         elif event.key == pygame.K_KP_MINUS:
                             pixelsize -= 1 * (pixelsize > 1)
                             screeninit()
+                        elif event.key == pygame.K_F6:
+                            iso_line_debug_view = not iso_line_debug_view
+                        elif event.key == pygame.K_i:
+                            iso_line_every += 1
+                        elif event.key == pygame.K_k:
+                            iso_line_every = max(iso_line_every-1, 2)
+                        elif event.key == pygame.K_o:
+                            iso_line_offset += 1
+                        elif event.key == pygame.K_l:
+                            iso_line_offset -= 1
+                            
 
                 if steps > 0:
                     steps -= 1
@@ -464,7 +468,7 @@ if __name__ == "__main__":
                                                      pixelsize*j,
                                                      pixelsize,
                                                      pixelsize))
-
+                
                 # 2. Draw Regions
                 for r in d.regions:
 
@@ -496,8 +500,18 @@ if __name__ == "__main__":
                                                2*pixelsize,
                                                2*pixelsize))
 
+                # 6. Draw isolines for debugging
+                if iso_line_debug_view:
+                    region_surface.fill((0,0,0,0))
+                    for i in range(data.shape[0]):
+                        for j, v in enumerate(data[i]):
+                            if (v + iso_line_offset) % iso_line_every < iso_line_every//2:
+                                region_surface.fill((255, 0, 0, 100), rect = (pixelsize*i,
+                                                                              pixelsize*j,
+                                                                              pixelsize,
+                                                                              pixelsize))
 
-
+                    screen.blit(region_surface, (0,0))
 
 
 
