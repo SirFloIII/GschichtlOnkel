@@ -286,7 +286,7 @@ class SlopeDecomposition:
                                 for p in c:
                                     region.add(p)
                             else:
-                                new_region = Region()
+                                new_region = Region(self)
                                 new_region.halo = c & total_halo
                                 for p in c & points:
                                     new_region.add(p)
@@ -353,7 +353,7 @@ class SlopeDecomposition:
 if __name__ == "__main__":
 
 
-    profiling_mode = False
+    profiling_mode = True
 
     #dummy data for debug
     #d = np.round(10*np.random.rand(6,6)).astype(np.int)
@@ -363,6 +363,9 @@ if __name__ == "__main__":
 #    pic = Image.open("mediumTestImage.png")
     data = np.array(pic)[..., 1]
     data = 255-data
+    
+    data = np.random.randint(0, 255, size = (10, 10, 10))
+    
     d=SlopeDecomposition(data)
 
     if profiling_mode:
