@@ -4,6 +4,7 @@ from PIL import Image
 from copy import copy
 #from tqdm import tqdm
 from random import betavariate as rb
+from collections import defaultdict
 
 class Region:
 
@@ -51,10 +52,6 @@ class Region:
 
         self.halo |= new_halo
         self.halo.discard(point)
-
-        if not self.halo:
-            self.passivate()
-
 
 
 class SlopeDecomposition:
@@ -139,8 +136,10 @@ class SlopeDecomposition:
         # first off, deal with points that can be assigned to existing regions
         while any([r.halo & points for r in self.active_regions]):
             # make sure the halos consist only of unassigned points
-            for r in self.regions:
+            for r in self.active_regions:
                 r.halo &= self.unassigned_points
+                if not r.halo:
+                    r.passivate()
                 
             for region in self.active_regions:
                 active_points = points & region.halo
@@ -159,21 +158,23 @@ class SlopeDecomposition:
 
                         if len(self.find_connected_components(local_env, local_env)) > 1:
                             # test global connectedness now
-                            #TODO: look at these cases, whether we can do another cheap test.
-                            self.ö += 1
-                            print("global test 1 no", self.ö)
-                            components = self.find_connected_components(local_env, self.unassigned_points)
-                            
-                            # sort components, biggest chunk of unassigned points in front
-                            components = sorted(components, key = len, reverse=True)
+                            if not self.connectedness_heuristic(local_env):
+                                self.ö += 1
+                                print("global test 1 no", self.ö)
+                                components = self.find_connected_components(local_env, self.unassigned_points)
+                                
+                                # sort components, biggest chunk of unassigned points in front
+                                components = sorted(components, key = len, reverse=True)
                         
-                        if len(components) == 1:
-                            active_points = points & region.halo
-                            continue
                         
                         # list of all the regions with point in their halo
                         involved_regions = [region] + [r for r in self.active_regions
                                                        if point in r.halo]
+
+                        if len(components) == 1 and len(involved_regions) == 1:
+                            active_points = points & region.halo
+                            continue
+                        
 
                         # union of halos of involved regions
                         involved_halos = set()
@@ -213,10 +214,6 @@ class SlopeDecomposition:
                                         if not is_plateau:
                                             # in this case we just found a halo
                                             found_halo = True
-
-                            if not found_halo:
-                                print("not found halo passivate")
-                                r.passivate()
 
                         # deal with remaining components
                         while compo_and_halo:
@@ -264,13 +261,13 @@ class SlopeDecomposition:
 
                     if len(self.find_connected_components(local_env, local_env)) > 1:
                         # test global connectedness now
-                        #TODO: look at these cases, whether we can do another cheap test.
-                        self.ä += 1
-                        print("global test 2 no", self.ä)
-                        components = self.find_connected_components(local_env, self.unassigned_points)
-                        
-                        # sort components, biggest chunk of unassigned points in front
-                        components = sorted(components, key = len, reverse=True)
+                        if not self.connectedness_heuristic(local_env):
+                            self.ä += 1
+                            print("global test 2 no", self.ä)
+                            components = self.find_connected_components(local_env, self.unassigned_points)
+                            
+                            # sort components, biggest chunk of unassigned points in front
+                            components = sorted(components, key = len, reverse=True)
 
                     if len(components) > 1: # else there is nothing to do
                         total_halo = region.halo
@@ -313,8 +310,43 @@ class SlopeDecomposition:
             small_set_copy -= component
         return components
 
+    def connectedness_heuristic(self, small_set):
+        small_set = list(small_set)
+        for a, b in zip(small_set[:-1], small_set[1:]):
+            if not self.find_path(a, b):
+                return False
+        else:
+            return True
+    
+    def find_path(self, start, goal):
+        # translated from https://en.wikipedia.org/wiki/A*_search_algorithm
+        h = lambda x: np.max(np.array(x)-np.array(goal))
 
-
+        openSet = {start}
+        # cameFrom = dict() # not necessary if we only want to know wether a path exists
+        gScore = defaultdict(lambda:float("inf"))
+        gScore[start] = 0
+        fScore = defaultdict(lambda:float("inf"))
+        fScore[goal] = h(start)
+        
+        while openSet:
+            current = min(openSet, key = lambda x:fScore[x])
+            if current == goal:
+                return True
+            
+            openSet.remove(current)
+            for neighbor in self.get_cube(current) & self.unassigned_points:
+                tenative_gScore = gScore[current] + 1
+                if tenative_gScore < gScore[neighbor]:
+                    # cameFrom[neighbor] = current
+                    gScore[neighbor] = tenative_gScore
+                    fScore[neighbor] = gScore[neighbor] + h(neighbor)
+                    if neighbor not in openSet:
+                        openSet.add(neighbor)
+        
+        return False
+            
+        
 if __name__ == "__main__":
 
 
