@@ -193,12 +193,15 @@ class SlopeDecomposition:
                                         # a halo for the region yet.
                                         
                                         r.halo |= h
+                                        for p in h & points:
+                                            r.add(p)
                                         compo_and_halo.remove((c,h))
                                         if not is_plateau:
                                             # in this case we just found a halo
                                             found_halo = True
 
                             if not found_halo:
+                                print("not found halo passivate")
                                 r.passivate()
 
                         # deal with remaining components
