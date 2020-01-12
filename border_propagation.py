@@ -73,6 +73,8 @@ class SlopeDecomposition:
         self.ö = 0
         self.ä = 0
         
+        self.image = array
+        
         # for use in get_neigh
         self.a_shape = array.shape
 
@@ -284,7 +286,7 @@ class SlopeDecomposition:
                                 for p in c:
                                     region.add(p)
                             else:
-                                new_region = Region()
+                                new_region = Region(self)
                                 new_region.halo = c & total_halo
                                 for p in c & points:
                                     new_region.add(p)
@@ -320,7 +322,7 @@ class SlopeDecomposition:
     
     def find_path(self, start, goal):
         # translated from https://en.wikipedia.org/wiki/A*_search_algorithm
-        h = lambda x: np.max(np.array(x)-np.array(goal))
+        h = lambda x: np.max(np.abs(np.array(x)-np.array(goal)))
 
         openSet = {start}
         # cameFrom = dict() # not necessary if we only want to know wether a path exists
@@ -330,6 +332,7 @@ class SlopeDecomposition:
         fScore[goal] = h(start)
         
         while openSet:
+#            draw(highlight_area = openSet)
             current = min(openSet, key = lambda x:fScore[x])
             if current == goal:
                 return True
@@ -350,7 +353,7 @@ class SlopeDecomposition:
 if __name__ == "__main__":
 
 
-    profiling_mode = False
+    profiling_mode = True
 
     #dummy data for debug
     #d = np.round(10*np.random.rand(6,6)).astype(np.int)
@@ -360,6 +363,9 @@ if __name__ == "__main__":
 #    pic = Image.open("mediumTestImage.png")
     data = np.array(pic)[..., 1]
     data = 255-data
+    
+    data = np.random.randint(0, 255, size = (10, 10, 10))
+    
     d=SlopeDecomposition(data)
 
     if profiling_mode:
