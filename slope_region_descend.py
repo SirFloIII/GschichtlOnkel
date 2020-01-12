@@ -381,16 +381,23 @@ if __name__ == "__main__":
 
         alpha = 128
 
-        colors = ((0xff, 0x9f, 0x1c, alpha),
-                  (0xad, 0x34, 0x3e, alpha),
-                  (0x06, 0x7b, 0xc2, alpha),
-                  (0xd3, 0x0c, 0xfa, alpha),
-                  (0x0c, 0xfa, 0xfa, alpha),
-                  (0x18, 0xe7, 0x2e, alpha),
-                  (0x23, 0x09, 0x03, alpha),
-                  (0xdb, 0x54, 0x61, alpha),
-                  (0x19, 0x72, 0x78, alpha),
-                  (0xee, 0x6c, 0x4d, alpha))
+#        colors = ((0xff, 0x9f, 0x1c, alpha),
+#                  (0xad, 0x34, 0x3e, alpha),
+#                  (0x06, 0x7b, 0xc2, alpha),
+#                  (0xd3, 0x0c, 0xfa, alpha),
+#                  (0x0c, 0xfa, 0xfa, alpha),
+#                  (0x18, 0xe7, 0x2e, alpha),
+#                  (0x23, 0x09, 0x03, alpha),
+#                  (0xdb, 0x54, 0x61, alpha),
+#                  (0x19, 0x72, 0x78, alpha),
+#                  (0xee, 0x6c, 0x4d, alpha))
+        
+        import colorsys
+        
+        colors = []
+        for i in range(100):
+            c = colorsys.hsv_to_rgb(1.61803*i % 1, 1, 1-i/200)
+            colors.append((int(c[0]*255), int(c[1]*255), int(c[2]*255), alpha))
 
 
         import pygame
