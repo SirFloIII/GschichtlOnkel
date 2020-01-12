@@ -49,10 +49,8 @@ class Region:
             
         neigh = self.decomp.get_neigh(point)
         new_halo = neigh - self.points
-        new_halo &= self.decomp.unassigned_points
-
         self.halo |= new_halo
-        self.halo.discard(point)
+        self.halo &= self.decomp.unassigned_points
 
 
 class SlopeDecomposition:
@@ -290,7 +288,6 @@ class SlopeDecomposition:
                                 new_region.halo = c & total_halo
                                 for p in c & points:
                                     new_region.add(p, "remainder new region")
-                                new_region.halo &= self.unassigned_points
 
 
     def find_connected_components(self, small_set, big_set):
@@ -367,10 +364,6 @@ if __name__ == "__main__":
 ##    data = 255-data
     
     data = np.random.randint(0, 255, size = (10, 10, 10))
-    
-    
-#    import noise_gen
-#    data = noise_gen.data(20, 3)
     
     d=SlopeDecomposition(data)
 
