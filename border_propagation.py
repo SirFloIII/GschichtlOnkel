@@ -141,7 +141,8 @@ class SlopeDecomposition:
                 while active_points:
                     point = active_points.pop()
                     region.add(point)
-
+                    draw(point)
+                    
                     # test local connectedness around point as fast heuristic
                     local_env = self.get_cube(point) & self.unassigned_points
 
@@ -305,7 +306,7 @@ if __name__ == "__main__":
     #dummy data for debug
     #d = np.round(10*np.random.rand(6,6)).astype(np.int)
 #    pic = Image.open("brain.png")
-    pic = Image.open("perlin_small.png")
+    pic = Image.open("monkey_small.png")
 #    pic = Image.open("mediumTestImage.png")
     data = np.array(pic)[..., 1]
     data = 255-data
@@ -363,7 +364,72 @@ if __name__ == "__main__":
             region_surface.set_alpha(alpha)
 
         screeninit()
+        
+        def draw(highlight = None):
+            
+            # 1. Draw data
+            for i in range(data.shape[0]):
+                for j, v in enumerate(data[i]):
+                    screen.fill((v,v,v), rect = (pixelsize*i,
+                                                 pixelsize*j,
+                                                 pixelsize,
+                                                 pixelsize))
+            
+            # 2. Draw Regions
+            for r in d.regions:
 
+                region_surface.fill((0,0,0,0))
+
+                for p in r.points:
+                    region_surface.fill(colors[r.id%len(colors)], rect = (pixelsize*p[0],
+                                                               pixelsize*p[1],
+                                                               pixelsize,
+                                                               pixelsize))
+
+                # 3. Draw Halos
+                for p in r.halo:
+                    region_surface.fill(colors[r.id%len(colors)], rect = (pixelsize*p[0] + bordersize,
+                                                               pixelsize*p[1] + bordersize,
+                                                               pixelsize - 2*bordersize,
+                                                               pixelsize - 2*bordersize))
+
+                screen.blit(region_surface, (0,0))
+
+            # 4. Draw current point
+            if highlight:
+                i, j = highlight
+                screen.fill((255,0,0), rect = (pixelsize*i,
+                                               pixelsize*j,
+                                               pixelsize,
+                                               pixelsize))
+
+            # 5. Draw all colors for debugging.
+            if print_debug_colors:
+                for i, c in enumerate(colors):
+                    screen.fill(c, rect = (2*pixelsize*i,
+                                           0,
+                                           2*pixelsize,
+                                           2*pixelsize))
+
+            # 6. Draw isolines for debugging
+            if iso_line_debug_view:
+                region_surface.fill((0,0,0,0))
+                for i in range(data.shape[0]):
+                    for j, v in enumerate(data[i]):
+                        if (v + iso_line_offset) % iso_line_every < iso_line_every//2:
+                            region_surface.fill((255, 0, 0, 100), rect = (pixelsize*i,
+                                                                          pixelsize*j,
+                                                                          pixelsize,
+                                                                          pixelsize))
+
+                screen.blit(region_surface, (0,0))
+
+
+
+            pygame.display.flip()
+
+            clock.tick(20)
+        
         try:
 
             done = False
@@ -407,64 +473,8 @@ if __name__ == "__main__":
                     steps -= 1
                     step()
 
-
-                # 1. Draw data
-                for i in range(data.shape[0]):
-                    for j, v in enumerate(data[i]):
-                        screen.fill((v,v,v), rect = (pixelsize*i,
-                                                     pixelsize*j,
-                                                     pixelsize,
-                                                     pixelsize))
+                draw()
                 
-                # 2. Draw Regions
-                for r in d.regions:
-
-                    region_surface.fill((0,0,0,0))
-
-                    for p in r.points:
-                        region_surface.fill(colors[r.id%len(colors)], rect = (pixelsize*p[0],
-                                                                   pixelsize*p[1],
-                                                                   pixelsize,
-                                                                   pixelsize))
-
-                    # 3. Draw Halos
-                    for p in r.halo:
-                        region_surface.fill(colors[r.id%len(colors)], rect = (pixelsize*p[0] + bordersize,
-                                                                   pixelsize*p[1] + bordersize,
-                                                                   pixelsize - 2*bordersize,
-                                                                   pixelsize - 2*bordersize))
-
-                    screen.blit(region_surface, (0,0))
-
-                # 4. Draw current point
-
-
-                # 5. Draw all colors for debugging.
-                if print_debug_colors:
-                    for i, c in enumerate(colors):
-                        screen.fill(c, rect = (2*pixelsize*i,
-                                               0,
-                                               2*pixelsize,
-                                               2*pixelsize))
-
-                # 6. Draw isolines for debugging
-                if iso_line_debug_view:
-                    region_surface.fill((0,0,0,0))
-                    for i in range(data.shape[0]):
-                        for j, v in enumerate(data[i]):
-                            if (v + iso_line_offset) % iso_line_every < iso_line_every//2:
-                                region_surface.fill((255, 0, 0, 100), rect = (pixelsize*i,
-                                                                              pixelsize*j,
-                                                                              pixelsize,
-                                                                              pixelsize))
-
-                    screen.blit(region_surface, (0,0))
-
-
-
-                pygame.display.flip()
-
-                clock.tick(60)
 
         finally:
             pygame.quit()
