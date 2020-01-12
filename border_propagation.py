@@ -64,8 +64,8 @@ class SlopeDecomposition:
         return len(self.regions)
 
     def __repr__(self):
-        return "Decompostition of a "+str(self.array.shape)+\
-               " "+str(self.array.dtype)+" array into "+\
+        return "Decompostition of a "+str(self.image.shape)+\
+               " "+str(self.image.dtype)+" array into "+\
                str(len(self))+" slope regions."
 
     def __init__(self, array):
@@ -137,13 +137,12 @@ class SlopeDecomposition:
     def decomposeStep(self, lvl, points):
         # first off, deal with points that can be assigned to existing regions
         while any([r.halo & points for r in self.active_regions]):
-            # make sure the halos consist only of unassigned points
-            for r in self.active_regions:
-                r.halo &= self.unassigned_points
-                if not r.halo:
-                    r.passivate()
+            for region in self.active_regions:
+                if not region.halo:
+                    region.passivate()
                 
             for region in self.active_regions:
+                region.halo &= self.unassigned_points
                 active_points = points & region.halo
 
                 while active_points:
@@ -258,7 +257,7 @@ class SlopeDecomposition:
                 # test local connectedness around point as fast heuristic
                 local_env = self.get_cube(point) & self.unassigned_points
 
-                if local_env: #TODO: is there really nothing to do otherwise?
+                if local_env:
                     components = [self.unassigned_points]
 
                     if len(self.find_connected_components(local_env, local_env)) > 1:
@@ -359,10 +358,11 @@ if __name__ == "__main__":
     #d = np.round(10*np.random.rand(6,6)).astype(np.int)
 #    pic = Image.open("brain.png")
 #    pic = Image.open("monkey_small.png")
-    pic = Image.open("perlin_small.png")
+#    pic = Image.open("perlin_small.png")
 #    pic = Image.open("mediumTestImage.png")
-    data = np.array(pic)[..., 1]
-    data = 255-data
+
+##    data = np.array(pic)[..., 1]
+##    data = 255-data
     
     data = np.random.randint(0, 255, size = (10, 10, 10))
     
