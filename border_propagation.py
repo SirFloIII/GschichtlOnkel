@@ -345,6 +345,9 @@ if __name__ == "__main__":
         iso_line_every = 20
         iso_line_offset = 0
         
+        framerates = [1, 5, 10, 20, 60]
+        framerate_index = 4
+        
         pixelsize = 5
 
         pygame.init()
@@ -428,7 +431,7 @@ if __name__ == "__main__":
 
             pygame.display.flip()
 
-            clock.tick(20)
+            clock.tick(framerates[framerate_index])
         
         try:
 
@@ -467,6 +470,11 @@ if __name__ == "__main__":
                             iso_line_offset += 1
                         elif event.key == pygame.K_l:
                             iso_line_offset -= 1
+                        elif event.key == pygame.K_F7:
+                            framerate_index = max(framerate_index - 1, 0)
+                        elif event.key == pygame.K_F8:
+                            framerate_index = min(framerate_index + 1, len(framerates) - 1)
+                        
                             
 
                 if steps > 0:
