@@ -62,6 +62,7 @@ class SlopeDecomposition:
     def __init__(self, array):
         assert array.ndim > 1
         self.ö = 0
+        self.ä = 0
         
         # for use in get_neigh
         self.a_shape = array.shape
@@ -146,7 +147,7 @@ class SlopeDecomposition:
                             # test global connectedness now
                             #TODO: look at these cases, whether we can do another cheap test.
                             self.ö += 1
-                            print("global test no", self.ö)
+                            print("global test 1 no", self.ö)
                             components = self.find_connected_components(local_env, self.unassigned_points)
                             
                             # sort components, biggest chunk of unassigned points in front
@@ -252,8 +253,8 @@ class SlopeDecomposition:
                     if len(self.find_connected_components(local_env, local_env)) > 1:
                         # test global connectedness now
                         #TODO: look at these cases, whether we can do another cheap test.
-                        self.ö += 1
-                        print("global test 2 no", self.ö)
+                        self.ä += 1
+                        print("global test 2 no", self.ä)
                         components = self.find_connected_components(local_env, self.unassigned_points)
                         
                         # sort components, biggest chunk of unassigned points in front
@@ -262,16 +263,22 @@ class SlopeDecomposition:
                     if len(components) > 1: # else there is nothing to do
                         # assign biggest halo to the region
                         region.halo &= components[0]
+                        
+                        # also grow the region there instantly
+                        for p in region.halo & points:
+                            region.add(p)
+                            component.remove(p)
 
                         # assign plateaus to the region,
                         # other halo components get added to remaining_components
                         for c in components[1:]:
                             if c<=points:
                                 # plateau
-                                for p in c & points:
+                                for p in c:
                                     region.add(p)
                             else:
                                 remaining_components.append(c & points)
+                                #TODO remember info about halo for this region
 
                             component -= c
 
