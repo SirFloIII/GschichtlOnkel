@@ -34,6 +34,7 @@ class Region:
         self.halo = set()
 
     def add(self, point):
+        assert self.active
         assert point not in self.points
         self.points.add(point)
         try:
