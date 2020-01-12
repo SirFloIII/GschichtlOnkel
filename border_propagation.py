@@ -372,7 +372,48 @@ if __name__ == "__main__":
         screeninit()
         
         def draw(highlight = None):
+            global done, steps, print_debug_colors, pixelsize, iso_line_debug_view
+            global iso_line_every, iso_line_offset, framerate_index
             
+            # --- Main event loop
+            for event in pygame.event.get(): # User did something
+                if event.type == pygame.QUIT: # If user clicked close
+                    done = True # Flag that we are done so we exit this loop
+                if event.type == pygame.KEYDOWN:
+                    if event.key in [pygame.K_ESCAPE, pygame.K_BACKSPACE, pygame.K_F4]:
+                        done = True
+                    elif event.key == pygame.K_SPACE:
+                        steps += 1
+                    elif event.key == pygame.K_RIGHT:
+                        steps += 10
+                    elif event.key == pygame.K_UP:
+                        steps += 256
+                    elif event.key == pygame.K_DOWN:
+                        steps = 0
+                    elif event.key == pygame.K_F5:
+                        print_debug_colors = not print_debug_colors
+                    elif event.key == pygame.K_KP_PLUS:
+                        pixelsize += 1
+                        screeninit()
+                    elif event.key == pygame.K_KP_MINUS:
+                        pixelsize -= 1 * (pixelsize > 1)
+                        screeninit()
+                    elif event.key == pygame.K_F6:
+                        iso_line_debug_view = not iso_line_debug_view
+                    elif event.key == pygame.K_i:
+                        iso_line_every += 1
+                    elif event.key == pygame.K_k:
+                        iso_line_every = max(iso_line_every-1, 2)
+                    elif event.key == pygame.K_o:
+                        iso_line_offset += 1
+                    elif event.key == pygame.K_l:
+                        iso_line_offset -= 1
+                    elif event.key == pygame.K_F7:
+                        framerate_index = max(framerate_index - 1, 0)
+                    elif event.key == pygame.K_F8:
+                        framerate_index = min(framerate_index + 1, len(framerates) - 1)
+                        
+                        
             # 1. Draw data
             for i in range(data.shape[0]):
                 for j, v in enumerate(data[i]):
@@ -440,46 +481,7 @@ if __name__ == "__main__":
 
             done = False
             while (not done):
-                # --- Main event loop
-                for event in pygame.event.get(): # User did something
-                    if event.type == pygame.QUIT: # If user clicked close
-                        done = True # Flag that we are done so we exit this loop
-                    if event.type == pygame.KEYDOWN:
-                        if event.key in [pygame.K_ESCAPE, pygame.K_BACKSPACE, pygame.K_F4]:
-                            done = True
-                        elif event.key == pygame.K_SPACE:
-                            steps += 1
-                        elif event.key == pygame.K_RIGHT:
-                            steps += 10
-                        elif event.key == pygame.K_UP:
-                            steps += 256
-                        elif event.key == pygame.K_DOWN:
-                            steps = 0
-                        elif event.key == pygame.K_F5:
-                            print_debug_colors = not print_debug_colors
-                        elif event.key == pygame.K_KP_PLUS:
-                            pixelsize += 1
-                            screeninit()
-                        elif event.key == pygame.K_KP_MINUS:
-                            pixelsize -= 1 * (pixelsize > 1)
-                            screeninit()
-                        elif event.key == pygame.K_F6:
-                            iso_line_debug_view = not iso_line_debug_view
-                        elif event.key == pygame.K_i:
-                            iso_line_every += 1
-                        elif event.key == pygame.K_k:
-                            iso_line_every = max(iso_line_every-1, 2)
-                        elif event.key == pygame.K_o:
-                            iso_line_offset += 1
-                        elif event.key == pygame.K_l:
-                            iso_line_offset -= 1
-                        elif event.key == pygame.K_F7:
-                            framerate_index = max(framerate_index - 1, 0)
-                        elif event.key == pygame.K_F8:
-                            framerate_index = min(framerate_index + 1, len(framerates) - 1)
-                        
-                            
-
+                
                 if steps > 0:
                     steps -= 1
                     step()
