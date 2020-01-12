@@ -29,6 +29,8 @@ class Region:
         
     def passivate(self):
         self.active = False
+        self.decomp.active_regions.remove(self)
+        self.decomp.passive_regions.append(self)
         self.halo = set()
 
     def add(self, point):
@@ -42,6 +44,9 @@ class Region:
 
         self.halo |= new_halo
         self.halo.discard(point)
+
+        if not self.halo:
+            self.passivate()
 
 
 
@@ -216,10 +221,6 @@ class SlopeDecomposition:
 
                     active_points = points & region.halo
 
-                if not region.active:
-                    self.passive_regions.append(region)
-                    self.active_regions.remove(region)
-
         # then look at remaining points and create new regions as necessary
         remaining_points = points & self.unassigned_points
         if remaining_points:
@@ -262,6 +263,7 @@ class SlopeDecomposition:
                         # assign plateaus to the region,
                         # other halo components get added to remaining_components
                         for c in components[1:]:
+                            component -= c
                             if c<=points:
                                 # plateau
                                 for p in c:
@@ -269,6 +271,8 @@ class SlopeDecomposition:
                             else:
                                 new_region = Region()
                                 new_region.halo = c & total_halo
+                                for p in c & points:
+                                    new_region.add(p)
 
 
     def find_connected_components(self, small_set, big_set):
