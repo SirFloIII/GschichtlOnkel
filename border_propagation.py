@@ -195,14 +195,16 @@ class SlopeDecomposition:
                                     # and can therefor be assigned to r.
                                     
                                     is_plateau = c<=points
+                                    is_only_bordering_r = len([r for r in involved_regions if h & r.halo])<=0
                                     if is_plateau or not found_halo:
                                         # we can add the current component, if
                                         # it is a plateau or if we haven't found
                                         # a halo for the region yet.
                                         
                                         r.halo |= h
-                                        for p in h & points:
-                                            r.add(p)
+                                        if is_only_bordering_r:
+                                            for p in h & points:
+                                                r.add(p)
                                         compo_and_halo.remove((c,h))
                                         if not is_plateau:
                                             # in this case we just found a halo
@@ -317,8 +319,8 @@ if __name__ == "__main__":
     #dummy data for debug
     #d = np.round(10*np.random.rand(6,6)).astype(np.int)
 #    pic = Image.open("brain.png")
-#    pic = Image.open("monkey_small.png")
-    pic = Image.open("perlin_small.png")
+    pic = Image.open("monkey_small.png")
+#    pic = Image.open("perlin_small.png")
 #    pic = Image.open("mediumTestImage.png")
     data = np.array(pic)[..., 1]
     data = 255-data
