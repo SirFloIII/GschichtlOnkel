@@ -195,7 +195,7 @@ class SlopeDecomposition:
                                     # and can therefor be assigned to r.
                                     
                                     is_plateau = c<=points
-                                    is_only_bordering_r = len([r for r in involved_regions if h & r.halo])<=0
+                                    is_only_bordering_r = len([r for r in involved_regions if c & r.halo])<=0
                                     if is_plateau or not found_halo:
                                         # we can add the current component, if
                                         # it is a plateau or if we haven't found
