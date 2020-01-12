@@ -43,7 +43,7 @@ class Region:
         except KeyError:
             print("Added point ", point, " to Region ", self.id, ", but", sep = "", end = " ")
             print("it is already in Region", [r.id for r in self.decomp.regions if point in r.points and r != self][0])
-            input()
+#            input()
             
         neigh = self.decomp.get_neigh(point)
         new_halo = neigh - self.points
@@ -147,7 +147,7 @@ class SlopeDecomposition:
 
                 while active_points:
                     point = active_points.pop()
-                    draw(point)
+#                    draw(point)
                     region.add(point)
                                        
                     # test local connectedness around point as fast heuristic
@@ -323,8 +323,8 @@ if __name__ == "__main__":
     #dummy data for debug
     #d = np.round(10*np.random.rand(6,6)).astype(np.int)
 #    pic = Image.open("brain.png")
-    pic = Image.open("monkey_small.png")
-#    pic = Image.open("perlin_small.png")
+#    pic = Image.open("monkey_small.png")
+    pic = Image.open("perlin_small.png")
 #    pic = Image.open("mediumTestImage.png")
     data = np.array(pic)[..., 1]
     data = 255-data
