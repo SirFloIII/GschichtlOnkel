@@ -36,8 +36,13 @@ class Region:
     def add(self, point):
         assert point not in self.points
         self.points.add(point)
-        self.decomp.unassigned_points.remove(point)
-
+        try:
+            self.decomp.unassigned_points.remove(point)
+        except KeyError:
+            print("Added point ", point, " to Region ", self.id, ", but", sep = "", end = " ")
+            print("it is already in Region", [r.id for r in self.decomp.regions if point in r.points and r != self][0])
+            input()
+            
         neigh = self.decomp.get_neigh(point)
         new_halo = neigh - self.points
         new_halo &= self.decomp.unassigned_points
@@ -140,11 +145,12 @@ class SlopeDecomposition:
 
                 while active_points:
                     point = active_points.pop()
-                    region.add(point)
                     draw(point)
-                    
+                    region.add(point)
+                                       
                     # test local connectedness around point as fast heuristic
                     local_env = self.get_cube(point) & self.unassigned_points
+
 
                     if local_env: #TODO: is there really nothing to do otherwise?
                         components = [self.unassigned_points]
@@ -371,7 +377,7 @@ if __name__ == "__main__":
 
         screeninit()
         
-        def draw(highlight = None):
+        def draw(highlight_point = None, highlight_area = None):
             global done, steps, print_debug_colors, pixelsize, iso_line_debug_view
             global iso_line_every, iso_line_offset, framerate_index
             
@@ -442,13 +448,21 @@ if __name__ == "__main__":
 
                 screen.blit(region_surface, (0,0))
 
-            # 4. Draw current point
-            if highlight:
-                i, j = highlight
+            # 4. Draw highlighted point
+            if highlight_point:
+                i, j = highlight_point
                 screen.fill((255,0,0), rect = (pixelsize*i,
                                                pixelsize*j,
                                                pixelsize,
                                                pixelsize))
+            
+            # 4.5. Draw highlighted area
+            if highlight_area:
+                for p in highlight_area:
+                    screen.fill((255,0,0), rect = (pixelsize*p[0] + bordersize//2,
+                                                   pixelsize*p[1] + bordersize//2,
+                                                   pixelsize - 2*bordersize//2,
+                                                   pixelsize - 2*bordersize//2))
 
             # 5. Draw all colors for debugging.
             if print_debug_colors:
