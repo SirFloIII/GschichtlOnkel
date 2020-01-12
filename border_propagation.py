@@ -166,7 +166,11 @@ class SlopeDecomposition:
                             
                             # sort components, biggest chunk of unassigned points in front
                             components = sorted(components, key = len, reverse=True)
-
+                        
+                        if len(components) == 1:
+                            active_points = points & region.halo
+                            continue
+                        
                         # list of all the regions with point in their halo
                         involved_regions = [region] + [r for r in self.active_regions
                                                        if point in r.halo]
