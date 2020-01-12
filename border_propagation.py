@@ -366,6 +366,10 @@ if __name__ == "__main__":
     
     data = np.random.randint(0, 255, size = (10, 10, 10))
     
+    
+#    import noise_gen
+#    data = noise_gen.data
+    
     d=SlopeDecomposition(data)
 
     if profiling_mode:
