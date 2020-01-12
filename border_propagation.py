@@ -35,7 +35,7 @@ class Region:
         self.decomp.passive_regions.append(self)
         self.halo = set()
 
-    def add(self, point):
+    def add(self, point, id):
         assert self.active
         assert point not in self.points
         self.points.add(point)
@@ -44,6 +44,7 @@ class Region:
         except KeyError:
             print("Added point ", point, " to Region ", self.id, ", but", sep = "", end = " ")
             print("it is already in Region", [r.id for r in self.decomp.regions if point in r.points and r != self][0])
+            print("Add id =", id)
 #            input()
             
         neigh = self.decomp.get_neigh(point)
@@ -148,7 +149,7 @@ class SlopeDecomposition:
                 while active_points:
                     point = active_points.pop()
 #                    draw(point)
-                    region.add(point)
+                    region.add(point, "main loop")
                                        
                     # test local connectedness around point as fast heuristic
                     local_env = self.get_cube(point) & self.unassigned_points
@@ -210,7 +211,7 @@ class SlopeDecomposition:
                                         r.halo |= h
                                         if is_only_bordering_r:
                                             for p in h & points:
-                                                r.add(p)
+                                                r.add(p, "main plateau")
                                         compo_and_halo.remove((c,h))
                                         if not is_plateau:
                                             # in this case we just found a halo
@@ -252,7 +253,7 @@ class SlopeDecomposition:
             # region, but we need to test for self-collision
             while component:
                 point = component.pop()
-                region.add(point)
+                region.add(point, "remainder component")
 
                 # test local connectedness around point as fast heuristic
                 local_env = self.get_cube(point) & self.unassigned_points
@@ -283,12 +284,13 @@ class SlopeDecomposition:
                             if c<=points:
                                 # plateau
                                 for p in c:
-                                    region.add(p)
+                                    region.add(p, "remainder plateau")
                             else:
                                 new_region = Region(self)
                                 new_region.halo = c & total_halo
                                 for p in c & points:
-                                    new_region.add(p)
+                                    new_region.add(p, "remainder new region")
+                                new_region.halo &= self.unassigned_points
 
 
     def find_connected_components(self, small_set, big_set):
