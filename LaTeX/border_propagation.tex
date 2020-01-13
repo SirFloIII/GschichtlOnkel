@@ -83,7 +83,9 @@ By abstracting from image and tomography to a real function defined on some subs
 
 \section{Defining Slope Regions}
 
-In this and the following chapters we will consider a set $\Omega \subset \mathbb{R}^n$ with $n > 1$ and a continuous function $f: \Omega \to \mathbb{R}$.
+%In this and the following chapters we will consider a set $\Omega \subset \mathbb{R}^n$ with $n > 1$ and a continuous function $f: \Omega \to \mathbb{R}$.
+
+In this and the following chapters we will consider a topological space $(\Omega, \mathcal T)$ with a continuous function $f: \Omega \to \mathbb{R}$. In practice or for ease of imagination $(\Omega, \mathcal T)$ will typically be a rectangle or cuboid, subset of $\mathbb R^2$ or $\mathbb R^3$ equipped with the euclidean topology and $f$ will describe an image or a 3D-Scan.
 
 \begin{defn}
 A path $\gamma: [a,b] \to \Omega$ is called \emph{monotonic} if and only if it is continuous and
@@ -121,23 +123,23 @@ Consider two slope region decompositions $\mathcal{A} = \left\{ A_i \subset \Ome
 \end{equation*}
 \end{defn}
 
-\begin{lem}
+\begin{thm}
 $\succeq$ is a partial order, i.e. fulfills reflexivity, antisymmetry and transitivity.
 
 \emph{Proof:} trivial \hfill $\Box$
-\end{lem}
+\end{thm}
 
 \begin{defn}
 A slope region decomposition $\mathcal{A}$ is called \emph{maximally coarse} or simply \emph{coarse} if and only if there is no other coarser slope region decomposition.
 \end{defn}
 
-\begin{lem}
+\begin{thm}
 \label{slope_iff_conn_lvlsets}
 Let $A \subset \Omega$ be a path-connected set. $A$ is a slope region if and only if all levelsets of $f$ in $A$ are path-connected, i.e.
 \begin{equation*}
 \forall c \in \mathbb{R}: f^{-1}(c) \cap A ~ \text{is path-connected}.
 \end{equation*}
-\end{lem}
+\end{thm}
 
 \emph{Proof:} "$\Rightarrow$" via contraposition:
 
@@ -201,6 +203,44 @@ The same algorithm can be applied in higher dimensions. We deal with iso-hyper-s
 \section{Details About BP}
 
 \section{BP And Reeb Graph}
+
+There is a significant connection between Reeb Graphs and Slope Region Decompositions.
+
+\begin{defn}
+Let $(\Omega, \mathcal T)$ be a topological space, and $f: \Omega \to \mathbb R$ continuous. We define an equivalence relation for $x,y \in \Omega$: 
+\begin{equation*}
+x \sim y :\Leftrightarrow f(x) = f(y) = c ~\land ~ x ~\text{and}~ y ~\text{are path-connected in}~ f^{-1}(c)
+\end{equation*}
+The \emph{Reeb-Graph} of $\Omega$ is $G := \Omega/_\sim$
+\end{defn}
+
+\begin{wrapfigure}{r}{0.4\textwidth}
+\centering
+\includegraphics[width=0.4\textwidth]{img/Reebgraph.png}
+\caption{Reeb Graph of Torus}
+\label{fig:reeb_torus}
+\end{wrapfigure}
+
+\begin{exmp}
+Let $\Omega$ be a torus on its side and $f$ be the distance from the ground. Its Reeb Graph is depicted in Figure \ref{fig:reeb_torus}.
+\end{exmp}
+
+In general, a Reeb Graph consists of vertices and lines between them. Vertices correspond to critical points of $f$. They are local extrema iff their rank is $1$ and saddle points iff their rank is bigger than $2$.
+
+\begin{thm}
+Let $S$ be a Slope Region. $S/_\sim$ may intersect no more than one point of $G$ at a given height.
+
+\emph{Proof:} Follows from Theorem \ref{slope_iff_conn_lvlsets}.\hfill $\Box$
+\end{thm}
+
+Conversely:
+
+\begin{thm}
+Let $L$ be a connected linear subset of $G$. $S := \bigcup_{l \in L} l is a slope region with the additional property that its borders are along levelsets.$
+
+\emph{Proof:} Also follows from Theorem \ref{slope_iff_conn_lvlsets}.\hfill $\Box$
+\end{thm}
+
 
 \section{BP And Other Segmentation Methods}
 
