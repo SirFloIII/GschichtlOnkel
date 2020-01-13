@@ -81,7 +81,7 @@ Now, if you are inclined to visualize a fourth spacial dimension, you can think 
 
 By abstracting from image and tomography to a real function defined on some subset of $\mathbb{R}^n$ (think of it as the brightness function!), and by rigorously defining a coarsest slope decomposition, we can lift the concept to arbitrary dimensions in a mathematically concise fashion.
 
-\section{Definitions}
+\section{Defining Slope Regions}
 
 In this and the following chapters we will consider a set $\Omega \subset \mathbb{R}^n$ with $n > 1$ and a continuous function $f: \Omega \to \mathbb{R}$.
 
@@ -132,6 +132,7 @@ A slope region decomposition $\mathcal{A}$ is called \emph{maximally coarse} or 
 \end{defn}
 
 \begin{lem}
+\label{slope_iff_conn_lvlsets}
 Let $A \subset \Omega$ be a path-connected set. $A$ is a slope region if and only if all levelsets of $f$ in $A$ are path-connected, i.e.
 \begin{equation*}
 \forall c \in \mathbb{R}: f^{-1}(c) \cap A ~ \text{is path-connected}.
@@ -175,7 +176,7 @@ $\gamma$ is a monotonic path from $x$ to $y$, thus $A$ is a slope region.
 
 
 \section{Motivating The Border Propagation Algorithm}
-We will now work our way to the central insights on which the border propagation algorithm hinges.
+We will now work our way to the central insights on which the border propagation algorithm (abbreviated to \emph{BP}) hinges.
 
 Slope regions can be constructed and grown in a straight-forward iterative manner by sweeping through the function values from lowest to highest. This is similar to the intuition employed in Morse theory\cite{MatsumotoYukio2002AitM}. Visualize a smooth, compact 2D surface in 3D space. Initially, our decomposition is empty, i.e. there are no slope regions (and we thus don't yet have an actual \emph{decomposition}).
 
@@ -197,6 +198,22 @@ Eventually this procedure will arrive at the global maximum, and the entire surf
 
 The same algorithm can be applied in higher dimensions. We deal with iso-hyper-surfaces as level sets, but the topological considerations about connectedness remain the same as in the illustrative 2D case.
 
+\section{Details About BP}
+
+\section{BP And Reeb Graph}
+
+\section{BP And Other Segmentation Methods}
+
+\section{Further Potential Development}
+
+\section{Authors' Individual Contributions}
+The BP algorithm as well as this paper are the result of a pattern recognition course held at the Vienna University Of Technology from Oct 2019 till Jan 2020. Professor \textsc{Kropatsch} introduced us to the concept of slope regions and posed the challenge to compute them in high dimensions (>2). Initially both authors were tasked with small building blocks for this endeavor:
+
+Alex Palmrich was to develop and implement a recognizer for saddle points, for which he coded a framework to perform efficient local regression of arbitrary degree on grid-sampled functions in arbitrary dimension. The gradient of the regression function was used to determine singular points, while the eigenvalues $\lambda_i$ of the hessian matrix provided a classification of singular points into minima (all $\lambda_i>0$), valleys (some $\lambda_i=0$, the rest positive), degenerate points (all $\lambda_i=0$), saddles (some $\lambda_i$ positive, some negative), ridges (some $\lambda_i=0$, the rest negative) and maxima (all $\lambda_i<0$). This approach proved difficult to use in practice, as there were many parameters to choose, and the recognizer proved very sensitive to noise despite the smoothing resulting from regression over a big local environment. As such this fairly finished project was dropped in favor of developing BP.
+
+Florian Bogner was to train a neural network as a recognizer for saddle points. He wrote a framework to generate test data through iterated concatenation of well-known functions. This data was to be searched for saddle points by Palmrich's algorithm and then be used as training data for the network. Since the saddle detector proved unsatisfactory, this approach was also shelved, and energy was directed to the joint development of BP.
+
+Most of the theory behind BP as well as the actual code was conceived in direct interaction between both authors. Some tidbits might be attributed to one of them, such as Bogner's idea to swap halo components between regions, his proof of theorem \ref{slope_iff_conn_lvlsets},
 
 %TODO
 % reeb graph
