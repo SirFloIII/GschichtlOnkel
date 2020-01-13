@@ -170,7 +170,7 @@ $\gamma$ is a monotonic path from $x$ to $y$, thus $A$ is a slope region.
 
 
 
-\section{Motivating The Border Propagation Algorithm}
+\section{Motivating The Border Propagation (BP) Algorithm}
 We will now work our way to the central insights on which the border propagation algorithm (abbreviated to \emph{BP}) hinges.
 
 Slope regions can be constructed and grown in a straight-forward iterative manner by sweeping through the function values from lowest to highest. This is similar to the intuition employed in Morse theory\cite{MatsumotoYukio2002AitM}. Visualize a smooth, compact 2D surface in 3D space. Initially, our decomposition is empty, i.e. there are no slope regions (and we thus don't yet have an actual \emph{decomposition}).
@@ -185,7 +185,7 @@ With the water rising further still, the regions will grow upwards to a point wh
 
 If the points remain connected, then we have to decide for a single one of the involved regions to be allowed to grow upwards from the component. This means that one region effectively inherits the growth directions from the other region(s). The other region(s) lose their potential for expansion and remain frozen in their current state.
 
-If the unassigned points have multiple components, then we may assign one component to each involved region. The regions will then grow only in the directions determined by the assigned components as the water rises. Any region without assigned component remains frozen. Should there be more components than regions, then we open up a new region for each surplus component.
+If the unassigned points have multiple components, then we may assign one component to each involved region. The regions will then grow only in the directions determined by the assigned components as the water rises. Any region without an assigned component remains frozen. Should there be more components than regions, then we open up a new region for each surplus component.
 
 An oddity which can occur are self-loops: A region might grow into a "C"-shape, and then proceed to close up into an "O"-shape. This case can be treated similarly as above, the only difference is that the saddle is found by recognizing that the region collides with itself, instead of with another region.
 
@@ -200,6 +200,8 @@ As a result, there are multiple ways to define what a \emph{discrete slope regio
 %we assume continuous data, allow some disconnected levelsets being treated as connectes
 %we use halos
 %we test for connectedness locally
+%heuristic of halo assign for low noise impact
+%link to git
 % theorem: any two regions border only at a single height
 
 \section{BP And Reeb Graph}
@@ -251,10 +253,23 @@ Let $L$ be a connected linear subset of $G$. $S := \bigcup_{l \in L} l is a slop
 
 
 \section{Further Potential Development}
-%optimize runtime: make component search fast by moving along isosurfaces
-%use level set data structures for speedup
-%search for connected copmonents along tolerance band -> jump tolerance as parameter
-%3D visualization
+The result of BP is satisfactory, but the authors assume that improvements can be made in running time. The code was profiled multiple times and has been adapted to run faster with significant gains in many instances.
+
+Most of the CPU cycles get eaten by the search for connected components (as of writing this document). We have already put efficient preliminary tests into place in order to minimize the calls to these expensive searches. Yet two runtime improvements came to the authors' minds:
+\begin{itemize}
+\item Growing regions not by a random choice from their halo, but from a priority queue, with new halo points being added to the end of the queue. This will reduce cases where self-collisions of regions are triggered, which require a call to the expensive search in order to be handled correctly.
+\item Making the expensive search itself more efficient: Searching for components with the A* algortihm, and encouraging the search to move along iso-surfaces. This will terminate the search far earlier in cases where there is only one component to be found, potentially reducing the complexity by one order for such calls. This optimization is being implemented as of writing.
+\end{itemize}
+
+Other additional features that the authors considered are
+\begin{itemize}
+\item An animated render of slope regions being build, for 3D data, showing different regions as point clouds of different colors.
+\item Generating the Reeb Graph from the slope region decomposition.
+\item Providing a \emph{tolerance} parameter, which governs how steep a continuous function might get, before an iso-surface is deemed disconnected in the discrete data. This would allow for a trade-off between connectedness which reflects the continuous case, but might yield fragmented regions on the discrete data, and a connectedness which is more geared towards the discrete concept of connectedness, at the cost of an increased number of regions.
+\item Using established data structures that model smooth level sets from discrete data. There might be performance gains in employing such a data structure.
+\end{itemize}
+
+Another interesting experiment would involve generating the Reeb Graph via an external library, dissect it to generate a slope region decomposition, and then pitting the resulting algorithm against BP. Let the games begin!
 
 \section{Authors' Individual Contributions}
 The BP algorithm as well as this paper are the result of a pattern recognition course held at the \href{https://www.tuwien.at/en/}{Vienna University Of Technology} from Oct 2019 till Jan 2020. Professor \textsc{Kropatsch} introduced us to the concept of slope regions and posed the challenge to compute them in high dimensions ($>2$). Initially both authors were tasked with small building blocks for this endeavor:
@@ -266,11 +281,7 @@ The BP algorithm as well as this paper are the result of a pattern recognition c
 Most of the theory behind BP as well as the actual code was conceived in direct interaction between both authors. Only some tidbits might be attributed to a single one of them, such as \textsc{Bogner}'s idea to swap halo components between regions, his proof of theorem \ref{slope_iff_conn_lvlsets}, or his code to generate an interactive display of the algorithm at work using pygame. \textsc{Palmrich} can be credited with the use of the halo data structure, the idea of moving along iso-surfaces for a speedup during the search of connected components, and the \emph{Motivating ...} chapters in this paper.
 
 %TODO
-% reeb graph
-% heuristic for assigning halos
 % images
-% potential further developments
-% slope decomposition seems similar to watershed, but is different
 
 \bibliography{lit}
 \bibliographystyle{plain}
