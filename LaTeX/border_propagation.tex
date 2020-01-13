@@ -118,9 +118,9 @@ Consider two slope region decompositions $\mathcal{A} = \left\{ A_i \subset \Ome
 
 \begin{thm}
 $\succeq$ is a partial order, i.e. fulfills reflexivity, antisymmetry and transitivity.
-
-\emph{Proof:} trivial \hfill $\Box$
 \end{thm}
+\emph{Proof:} trivial \hfill $\Box$
+
 
 \begin{defn}
 A slope region decomposition $\mathcal{A}$ is called \emph{maximally coarse} or simply \emph{coarse} if and only if there is no other coarser slope region decomposition.
@@ -175,6 +175,14 @@ We will now work our way to the central insights on which the border propagation
 
 Slope regions can be constructed and grown in a straight-forward iterative manner by sweeping through the function values from lowest to highest. This is similar to the intuition employed in Morse theory\cite{MatsumotoYukio2002AitM}. Visualize a smooth, compact 2D surface in 3D space. Initially, our decomposition is empty, i.e. there are no slope regions (and we thus don't yet have an actual \emph{decomposition}).
 
+\begin{wrapfigure}{R}{0.4\textwidth}
+\centering
+\includegraphics[width=0.4\textwidth]{img/slope_evolution.png}
+\caption{Evolution of Regions during the algorithm.}
+\label{fig:evolution}
+\end{wrapfigure}
+
+
 Starting at the global minimum, we add a new region, containing only the argmin (i.e. a single point on the 2D image where the minimal value is taken). Imagine a water level rising from below the surface, up to the point of first contact. Now, there might be many points where the global minimum is taken. This will either be due to flat regions (\emph{plateaus}) on the surface, which we want to include into the single existing region, or it will be due to individual dales, which all have their lowest point at the same height.
 
 In this second case, we can't put the points into the existing region, because we would not be able to get from one argmin to another via a monotonic path. Instead, we need to add a new region for each individual dale, that is to say we need to look at the connected components of the levelset and assign to each component a new region.
@@ -216,7 +224,7 @@ x \sim y :\Leftrightarrow f(x) = f(y) = c ~\land ~ x ~\text{and}~ y ~\text{are p
 The \emph{Reeb-Graph} of $\Omega$ is $G := \Omega/_\sim$
 \end{defn}
 
-\begin{wrapfigure}{r}{0.4\textwidth}
+\begin{wrapfigure}{R}{0.4\textwidth}
 \centering
 \includegraphics[width=0.4\textwidth]{img/Reebgraph.png}
 \caption{Reeb Graph of Torus}
@@ -238,11 +246,12 @@ Let $S$ be a Slope Region. $S/_\sim$ may intersect no more than one point of $G$
 Conversely:
 
 \begin{thm}
-Let $L$ be a connected linear subset of $G$. $S := \bigcup_{l \in L} l is a slope region with the additional property that its borders are along levelsets.$
+Let $L$ be a connected linear subset of $G$. $S := \bigcup_{l \in L} l$ is a slope region with the additional property that its internal borders are along levelsets.
 
 \emph{Proof:} Also follows from Theorem \ref{slope_iff_conn_lvlsets}.\hfill $\Box$
 \end{thm}
 
+Thus, decompositions of a Reeb Graph $G$ into connected linear subsets of $G$ are isomorphic to a Slope Region Decompositions with borders along levelsets, which are exactly the kind of slope region decompositions which BP produces.
 
 \section{BP And Other Segmentation Methods}
 \begin{itemize}
@@ -276,7 +285,7 @@ The BP algorithm as well as this paper are the result of a pattern recognition c
 
 \textsc{Alex Palmrich} was to develop and implement a recognizer for saddle points, for which he coded a framework to perform efficient local regression of arbitrary degree on grid-sampled functions in arbitrary dimension. The gradient of the regression function was used to determine singular points, while the eigenvalues $\lambda_i$ of the hessian matrix provided a classification of singular points into minima (all $\lambda_i>0$), valleys (some $\lambda_i=0$, the rest positive), degenerate points (all $\lambda_i=0$), saddles (some $\lambda_i$ positive, some negative), ridges (some $\lambda_i=0$, the rest negative) and maxima (all $\lambda_i<0$). This approach proved difficult to use in practice, as there were many parameters to choose, and the recognizer proved very sensitive to noise despite the smoothing resulting from regression over a big local environment. As such this fairly finished project was dropped in favor of developing BP.
 
-\textsc{Florian Bogner} was to train a neural network as a recognizer for saddle points. He wrote a framework to generate test data through iterated concatenation of well-known functions. This data was to be searched for saddle points by \textsc{Palmrich}'s algorithm and then be used as training data for the network. Since the saddle detector proved unsatisfactory, this approach was also shelved, and energy was directed to the joint development of BP.
+\textsc{Florian Bogner} was designing an similar algorithm to BP that assumed information about critical points as a given. It was supposed to use \textsc{Palmrich}'s recognizer in practice. However, as the recognizer wasn't perfect, it never reached satisfactory results and was also shelved, and energy was directed to the joint development of BP.
 
 Most of the theory behind BP as well as the actual code was conceived in direct interaction between both authors. Only some tidbits might be attributed to a single one of them, such as \textsc{Bogner}'s idea to swap halo components between regions, his proof of theorem \ref{slope_iff_conn_lvlsets}, or his code to generate an interactive display of the algorithm at work using pygame. \textsc{Palmrich} can be credited with the use of the halo data structure, the idea of moving along iso-surfaces for a speedup during the search of connected components, and the \emph{Motivating ...} chapters in this paper.
 

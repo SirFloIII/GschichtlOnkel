@@ -168,7 +168,7 @@ class SlopeDecomposition:
                                 self.ö += 1
                                 print("global test 1 no", self.ö)
                                 components = self.find_connected_components(local_env,
-                                                                            self.unassigned_points & tolerance_band)
+                                                                            self.unassigned_points)# & tolerance_band)
                                 
                                 # sort components, biggest chunk of unassigned points in front
                                 components = sorted(components, key = len, reverse=True)
@@ -238,7 +238,7 @@ class SlopeDecomposition:
                             # if the halo is empty however, we don't have to do anything.
                             if r.halo:
                                 h_compo = self.find_connected_components(r.halo,
-                                                                         self.unassigned_points & tolerance_band)
+                                                                         self.unassigned_points)# & tolerance_band)
                                 compo_and_halo += [(c, r.halo & c) for c in h_compo[1:]]
                                 r.halo &= h_compo[0]
 
@@ -368,8 +368,8 @@ if __name__ == "__main__":
     #d = np.round(10*np.random.rand(6,6)).astype(np.int)
 #    pic = Image.open("brain.png")
 #    pic = Image.open("monkey_small.png")
-    pic = Image.open("perlin_small.png")
-#    pic = Image.open("mediumTestImage.png")
+#    pic = Image.open("perlin_small.png")
+    pic = Image.open("mediumTestImage.png")
 
     data = np.array(pic)[..., 1]
 ##    data = 255-data
@@ -399,9 +399,9 @@ if __name__ == "__main__":
         
         colors = []
         for i in range(100):
-            c = colorsys.hsv_to_rgb(1.61803*i % 1, rb(5,1), rb(5,1))
+#            c = colorsys.hsv_to_rgb(1.61803*i % 1, rb(5,1), rb(5,1))
             #c = colorsys.hsv_to_rgb(1.61803*i % 1, ru(0.75,1), ru(0.5,1))
-            #c = colorsys.hsv_to_rgb(1.61803*i % 1, 1, 1-i/200)
+            c = colorsys.hsv_to_rgb(1.61803*i % 1, 1, 1-i/200)
             colors.append((int(c[0]*255), int(c[1]*255), int(c[2]*255), alpha))
 
 
