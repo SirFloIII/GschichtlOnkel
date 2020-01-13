@@ -46,10 +46,8 @@ class Region:
             print("it is already in Region", [r.id for r in self.decomp.regions if point in r.points and r != self][0])
             print("Add id =", id)
 #            input()
-            
-        neigh = self.decomp.get_neigh(point)
-        new_halo = neigh - self.points
-        self.halo |= new_halo
+
+        self.halo |= self.decomp.get_neigh(point)
         self.halo &= self.decomp.unassigned_points
 
 
@@ -67,12 +65,14 @@ class SlopeDecomposition:
                " "+str(self.image.dtype)+" array into "+\
                str(len(self))+" slope regions."
 
-    def __init__(self, array):
+    def __init__(self, array, tol=0.01):
         assert array.ndim > 1
         self.ö = 0
         self.ä = 0
-        
-        self.image = array
+
+        # normalize the array to [0,1]
+        self.image = array-float(array.min())
+        self.image /= self.image.max()
         
         # for use in get_neigh
         self.a_shape = array.shape
@@ -134,6 +134,10 @@ class SlopeDecomposition:
             yield lvl
 
     def decomposeStep(self, lvl, points):
+        tolerance_band = {p for val, s in self.levelsets
+                          for p in s
+                          if lvl<=val<=lvl+self.tol}
+        
         # first off, deal with points that can be assigned to existing regions
         while any([r.halo & points for r in self.active_regions]):
             for region in self.active_regions:
@@ -161,7 +165,8 @@ class SlopeDecomposition:
                             if not self.connectedness_heuristic(local_env):
                                 self.ö += 1
                                 print("global test 1 no", self.ö)
-                                components = self.find_connected_components(local_env, self.unassigned_points)
+                                components = self.find_connected_components(local_env,
+                                                                            self.unassigned_points & tolerance_band)
                                 
                                 # sort components, biggest chunk of unassigned points in front
                                 components = sorted(components, key = len, reverse=True)
@@ -230,7 +235,8 @@ class SlopeDecomposition:
                             # additional regions for the new components.
                             # if the halo is empty however, we don't have to do anything.
                             if r.halo:
-                                h_compo = self.find_connected_components(r.halo, self.unassigned_points)
+                                h_compo = self.find_connected_components(r.halo,
+                                                                         self.unassigned_points & tolerance_band)
                                 compo_and_halo += [(c, r.halo & c) for c in h_compo[1:]]
                                 r.halo &= h_compo[0]
 
@@ -264,7 +270,8 @@ class SlopeDecomposition:
                         if not self.connectedness_heuristic(local_env):
                             self.ä += 1
                             print("global test 2 no", self.ä)
-                            components = self.find_connected_components(local_env, self.unassigned_points)
+                            components = self.find_connected_components(local_env,
+                                                                        self.unassigned_points & tolerance_band)
                             
                             # sort components, biggest chunk of unassigned points in front
                             components = sorted(components, key = len, reverse=True)
@@ -287,6 +294,7 @@ class SlopeDecomposition:
                                 new_region = Region(self)
                                 new_region.halo = c & total_halo
                                 for p in c & points:
+                                    #TODO this is wrong, test c for self-loops
                                     new_region.add(p, "remainder new region")
 
 
