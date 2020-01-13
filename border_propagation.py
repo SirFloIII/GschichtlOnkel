@@ -65,7 +65,7 @@ class SlopeDecomposition:
                " "+str(self.image.dtype)+" array into "+\
                str(len(self))+" slope regions."
 
-    def __init__(self, array, tol=0.01):
+    def __init__(self, array, tol=0.1):
         assert array.ndim > 1
         self.ö = 0
         self.ä = 0
@@ -73,6 +73,8 @@ class SlopeDecomposition:
         # normalize the array to [0,1]
         self.image = array-float(array.min())
         self.image /= self.image.max()
+
+        self.tol = tol
         
         # for use in get_neigh
         self.a_shape = array.shape
@@ -134,8 +136,8 @@ class SlopeDecomposition:
             yield lvl
 
     def decomposeStep(self, lvl, points):
-        tolerance_band = {p for val, s in self.levelsets
-                          for p in s
+        tolerance_band = {p for val in self.levelsets
+                          for p in self.levelsets[val]
                           if lvl<=val<=lvl+self.tol}
         
         # first off, deal with points that can be assigned to existing regions
@@ -299,10 +301,11 @@ class SlopeDecomposition:
 
 
     def find_connected_components(self, small_set, big_set):
-        assert small_set <= big_set
+##        assert small_set <= big_set
         assert small_set
 
         small_set_copy = copy(small_set)
+        big_set_copy = small_set | big_set
 
         components = []
         while small_set_copy:
@@ -313,7 +316,7 @@ class SlopeDecomposition:
                 #TODO: implement A* search and break as soon as there's only one component
                 point = border.pop()
                 component.add(point)
-                border |= (self.get_cube(point) & big_set) - component
+                border |= (self.get_cube(point) & big_set_copy) - component
             components.append(component)
             small_set_copy -= component
         return components
@@ -359,19 +362,19 @@ class SlopeDecomposition:
 if __name__ == "__main__":
 
 
-    profiling_mode = True
+    profiling_mode = False
 
     #dummy data for debug
     #d = np.round(10*np.random.rand(6,6)).astype(np.int)
 #    pic = Image.open("brain.png")
 #    pic = Image.open("monkey_small.png")
-#    pic = Image.open("perlin_small.png")
+    pic = Image.open("perlin_small.png")
 #    pic = Image.open("mediumTestImage.png")
 
-##    data = np.array(pic)[..., 1]
+    data = np.array(pic)[..., 1]
 ##    data = 255-data
     
-    data = np.random.randint(0, 255, size = (10, 10, 10))
+##    data = np.random.randint(0, 255, size = (10, 10, 10))
     
     d=SlopeDecomposition(data)
 
