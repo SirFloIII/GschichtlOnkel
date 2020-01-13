@@ -18,6 +18,7 @@
 \usepackage{amsthm}
 \usepackage{cite}
 \usepackage{wrapfig}
+\usepackage{hyperref}
 
 \theoremstyle{plain}
 \newtheorem{thm}{Theorem}[section] % reset theorem numbering for each chapter
@@ -39,7 +40,7 @@ Border Propagation: A Novel Approach To Determining Slope Region Decompositions
 \vfill
 
 \normalsize
-Florian Bogner \& Alexander Palmrich
+\textsc{Florian Bogner} \& \textsc{Alexander Palmrich}
 \end{titlepage}
 
 
@@ -47,14 +48,6 @@ Florian Bogner \& Alexander Palmrich
 
 \tableofcontents
 \newpage
-
-%% high level abstract: %%
-% - motivate slope region with 2D function surface
-% - define slope region for any dimension
-% - reference known algorithm
-% - motivate new algorithm for continuous case
-% - describe discrete algorithm
-% - many many fancy pictures
 
 \section{Abstract}
 
@@ -201,6 +194,13 @@ Eventually this procedure will arrive at the global maximum, and the entire surf
 The same algorithm can be applied in higher dimensions. We deal with iso-hyper-surfaces as level sets, but the topological considerations about connectedness remain the same as in the illustrative 2D case.
 
 \section{Details About BP}
+The somewhat vague description of BP in the previous section assumed a continuous surface. In most applications however, the data will be provided in a discrete raster format. Some intricacies arise from this discretization, most notably iso-surfaces of a smooth function $f$ will not have a straight-forward representation in the discrete grid obtained from rasterizing $f$.
+
+As a result, there are multiple ways to define what a \emph{discrete slope region} is supposed to be.
+%we assume continuous data, allow some disconnected levelsets being treated as connectes
+%we use halos
+%we test for connectedness locally
+% theorem: any two regions border only at a single height
 
 \section{BP And Reeb Graph}
 
@@ -243,25 +243,33 @@ Let $L$ be a connected linear subset of $G$. $S := \bigcup_{l \in L} l is a slop
 
 
 \section{BP And Other Segmentation Methods}
+\begin{itemize}
+\item BP might be considered a \href{https://en.wikipedia.org/wiki/Level-set_method}{level set method}.
+\item Even though the algorithm was motivated using a rising water surface, it is indeed very different from the seemingly similar \href{https://en.wikipedia.org/wiki/Watershed_(image_processing)}{watershed algorithm} both in its mechanics and resulting segmentation.
+\item Much like \href{https://en.wikipedia.org/wiki/Maximally_stable_extremal_regions}{maximally stable extremal regions method}, regions are grown around extrema in BP. But slope regions need not be extremal (in the sense that either all points in the region are above any point on the border, or all points are below), and neither is their broder maximally stable. In fact borders of slope regions will change quite drastically by sliding them up or down, as they will change their topology by passing a saddle point.
+\end{itemize}
+
 
 \section{Further Potential Development}
+%optimize runtime: make component search fast by moving along isosurfaces
+%use level set data structures for speedup
+%search for connected copmonents along tolerance band -> jump tolerance as parameter
+%3D visualization
 
 \section{Authors' Individual Contributions}
-The BP algorithm as well as this paper are the result of a pattern recognition course held at the Vienna University Of Technology from Oct 2019 till Jan 2020. Professor \textsc{Kropatsch} introduced us to the concept of slope regions and posed the challenge to compute them in high dimensions (>2). Initially both authors were tasked with small building blocks for this endeavor:
+The BP algorithm as well as this paper are the result of a pattern recognition course held at the \href{https://www.tuwien.at/en/}{Vienna University Of Technology} from Oct 2019 till Jan 2020. Professor \textsc{Kropatsch} introduced us to the concept of slope regions and posed the challenge to compute them in high dimensions ($>2$). Initially both authors were tasked with small building blocks for this endeavor:
 
-Alex Palmrich was to develop and implement a recognizer for saddle points, for which he coded a framework to perform efficient local regression of arbitrary degree on grid-sampled functions in arbitrary dimension. The gradient of the regression function was used to determine singular points, while the eigenvalues $\lambda_i$ of the hessian matrix provided a classification of singular points into minima (all $\lambda_i>0$), valleys (some $\lambda_i=0$, the rest positive), degenerate points (all $\lambda_i=0$), saddles (some $\lambda_i$ positive, some negative), ridges (some $\lambda_i=0$, the rest negative) and maxima (all $\lambda_i<0$). This approach proved difficult to use in practice, as there were many parameters to choose, and the recognizer proved very sensitive to noise despite the smoothing resulting from regression over a big local environment. As such this fairly finished project was dropped in favor of developing BP.
+\textsc{Alex Palmrich} was to develop and implement a recognizer for saddle points, for which he coded a framework to perform efficient local regression of arbitrary degree on grid-sampled functions in arbitrary dimension. The gradient of the regression function was used to determine singular points, while the eigenvalues $\lambda_i$ of the hessian matrix provided a classification of singular points into minima (all $\lambda_i>0$), valleys (some $\lambda_i=0$, the rest positive), degenerate points (all $\lambda_i=0$), saddles (some $\lambda_i$ positive, some negative), ridges (some $\lambda_i=0$, the rest negative) and maxima (all $\lambda_i<0$). This approach proved difficult to use in practice, as there were many parameters to choose, and the recognizer proved very sensitive to noise despite the smoothing resulting from regression over a big local environment. As such this fairly finished project was dropped in favor of developing BP.
 
-Florian Bogner was to train a neural network as a recognizer for saddle points. He wrote a framework to generate test data through iterated concatenation of well-known functions. This data was to be searched for saddle points by Palmrich's algorithm and then be used as training data for the network. Since the saddle detector proved unsatisfactory, this approach was also shelved, and energy was directed to the joint development of BP.
+\textsc{Florian Bogner} was to train a neural network as a recognizer for saddle points. He wrote a framework to generate test data through iterated concatenation of well-known functions. This data was to be searched for saddle points by \textsc{Palmrich}'s algorithm and then be used as training data for the network. Since the saddle detector proved unsatisfactory, this approach was also shelved, and energy was directed to the joint development of BP.
 
-Most of the theory behind BP as well as the actual code was conceived in direct interaction between both authors. Some tidbits might be attributed to one of them, such as Bogner's idea to swap halo components between regions, his proof of theorem \ref{slope_iff_conn_lvlsets},
+Most of the theory behind BP as well as the actual code was conceived in direct interaction between both authors. Only some tidbits might be attributed to a single one of them, such as \textsc{Bogner}'s idea to swap halo components between regions, his proof of theorem \ref{slope_iff_conn_lvlsets}, or his code to generate an interactive display of the algorithm at work using pygame. \textsc{Palmrich} can be credited with the use of the halo data structure, the idea of moving along iso-surfaces for a speedup during the search of connected components, and the \emph{Motivating ...} chapters in this paper.
 
 %TODO
 % reeb graph
 % heuristic for assigning halos
 % images
 % potential further developments
-% individual contributions F': theorem, border swap, interactive plot, ... A: halo data structure, moving along iso surfaces during search, ...
-% dismissed approach of local regression & neural network
 % slope decomposition seems similar to watershed, but is different
 
 \bibliography{lit}
