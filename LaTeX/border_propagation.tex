@@ -58,7 +58,7 @@ mention slope regions as defined in here\cite{kropatsch2019space}
 
 In this section we try to develop an intuitive understanding of the term \emph{slope region} and its generalization to dimensions higher than 2. The concise definitions of the terms already employed here is reserved for the next section.
 
-Consider an image, either gray-scale or in color. If it is a color image, it can be decomposed into its color channels, which can individually be read as gray-scale images. We now think of the light intensity (i.e. the image value) of one such gray-scale image as the height of a landscape, yielding a surface in 3D space. The surface will have hills in areas where the image is bright, and will have dales in dark areas. Please refer to figure \ref{fig:conversion} for a visualization!
+Consider an image, either gray-scale or in color. If it is a color image, it can be decomposed into its color channels (red-green-blue), which can individually be read as gray-scale images. We now think of the light intensity (i.e. the image value) of one such gray-scale image as the height of a landscape, yielding a surface in 3D space. The surface will have hills in areas where the image is bright, and will have dales in dark areas. Please refer to figure \ref{fig:conversion} for a visualization!
 
 
 \begin{figure}[h]
@@ -67,10 +67,10 @@ Consider an image, either gray-scale or in color. If it is a color image, it can
 \label{fig:conversion}
 \end{figure}
 
-Our aim now is to partition the surface into \emph{regions} (i.e. subsets) in a particular way: We require each region to consist only of a single slope, by which we mean that we can ascend (or descend) from any given point of the region, to any other given point of the region, along a path that runs entirely within the region. Such a decomposition is not unique, but we can at least try to get a partition \emph{as coarse as possible}, meaning that we merge slope regions if the resulting subset is still a slope region, and we iterate this until it can be done no more. There might be many different such coarsest slope decompositions, but we accept any one of them.
+Now our aim is to partition the surface into \emph{regions} (i.e. subsets) in a particular way: We require each region to consist only of a single slope, by which we mean that we can ascend (or descend) from any given point of the region, to any other given point of the region, along a path that runs entirely within the region. Such a decomposition is not unique, but we can at least try to get a partition \emph{as coarse as possible}, meaning that we merge slope regions if the resulting subset is still a slope region, and we iterate this until it can be done no more. There might be many different coarsest slope decompositions, but we accept any one of them.
 
-The criterion we used to describe slopes, any two points being connected by either an ascending or a descending path, can easily be used in higher dimensions. Think of a computer tomography scan, which will yield gray-scale data, but not just as a 2D image, but rather on a 3D volume.
-Now, if you are inclined to visualize a fourth spacial dimension, you can think of that fourth direction as the height of a 3D hyper-surface in 4D space, with the height encoded in the tomography scan. But imagining this is difficult and not required, because our slope region criterion works just fine here: We want to partition the 3D volume, such that any two points in a region can be connected via an either ascending or descending path within the region. Recall that \emph{ascending} and \emph{descending} refers to the brightness value of the tomography scan as we move in the volume.
+The criterion we used to describe slopes, any two points being connected by either an ascending or a descending path, can easily be used in higher dimensions. Think of a computer tomography scan, which will yield gray-scale data, but not just on a 2D image, but rather on a 3D volume.
+Now, if you are inclined to visualize a fourth spacial dimension, you can think of that fourth direction as the height of a 3D hyper-surface in 4D space, with the height encoded in the tomography scan. But imagining this is difficult and not required, because our slope region criterion works in any dimension: We want to partition the 3D volume, such that any two points in a region can be connected via an either ascending or descending path within the region. Recall that \emph{ascending} and \emph{descending} refers to the brightness value of the tomography scan as we move in the volume.
 
 By abstracting from image and tomography to a real function defined on some subset of $\mathbb{R}^n$ (think of it as the brightness function!), and by rigorously defining a coarsest slope decomposition, we can lift the concept to arbitrary dimensions in a mathematically concise fashion.
 
@@ -118,9 +118,9 @@ Consider two slope region decompositions $\mathcal{A} = \left\{ A_i \subset \Ome
 
 \begin{thm}
 $\succeq$ is a partial order, i.e. fulfills reflexivity, antisymmetry and transitivity.
-\end{thm}
-\emph{Proof:} trivial \hfill $\Box$
 
+\emph{Proof:} trivial \hfill $\Box$
+\end{thm}
 
 \begin{defn}
 A slope region decomposition $\mathcal{A}$ is called \emph{maximally coarse} or simply \emph{coarse} if and only if there is no other coarser slope region decomposition.
@@ -175,14 +175,6 @@ We will now work our way to the central insights on which the border propagation
 
 Slope regions can be constructed and grown in a straight-forward iterative manner by sweeping through the function values from lowest to highest. This is similar to the intuition employed in Morse theory\cite{MatsumotoYukio2002AitM}. Visualize a smooth, compact 2D surface in 3D space. Initially, our decomposition is empty, i.e. there are no slope regions (and we thus don't yet have an actual \emph{decomposition}).
 
-\begin{wrapfigure}{R}{0.4\textwidth}
-\centering
-\includegraphics[width=0.4\textwidth]{img/slope_evolution.png}
-\caption{Evolution of Regions during the algorithm.}
-\label{fig:evolution}
-\end{wrapfigure}
-
-
 Starting at the global minimum, we add a new region, containing only the argmin (i.e. a single point on the 2D image where the minimal value is taken). Imagine a water level rising from below the surface, up to the point of first contact. Now, there might be many points where the global minimum is taken. This will either be due to flat regions (\emph{plateaus}) on the surface, which we want to include into the single existing region, or it will be due to individual dales, which all have their lowest point at the same height.
 
 In this second case, we can't put the points into the existing region, because we would not be able to get from one argmin to another via a monotonic path. Instead, we need to add a new region for each individual dale, that is to say we need to look at the connected components of the levelset and assign to each component a new region.
@@ -205,6 +197,7 @@ The same algorithm can be applied in higher dimensions. We deal with iso-hyper-s
 The somewhat vague description of BP in the previous section assumed a continuous surface. In most applications however, the data will be provided in a discrete raster format. Some intricacies arise from this discretization, most notably iso-surfaces of a smooth function $f$ will not have a straight-forward representation in the discrete grid obtained from rasterizing $f$.
 
 As a result, there are multiple ways to define what a \emph{discrete slope region} is supposed to be.
+Let us first explore, why the most immediate choice for a definition is in fact a bad one:
 %we assume continuous data, allow some disconnected levelsets being treated as connectes
 %we use halos
 %we test for connectedness locally
@@ -224,7 +217,7 @@ x \sim y :\Leftrightarrow f(x) = f(y) = c ~\land ~ x ~\text{and}~ y ~\text{are p
 The \emph{Reeb-Graph} of $\Omega$ is $G := \Omega/_\sim$
 \end{defn}
 
-\begin{wrapfigure}{R}{0.4\textwidth}
+\begin{wrapfigure}{r}{0.4\textwidth}
 \centering
 \includegraphics[width=0.4\textwidth]{img/Reebgraph.png}
 \caption{Reeb Graph of Torus}
@@ -246,12 +239,11 @@ Let $S$ be a Slope Region. $S/_\sim$ may intersect no more than one point of $G$
 Conversely:
 
 \begin{thm}
-Let $L$ be a connected linear subset of $G$. $S := \bigcup_{l \in L} l$ is a slope region with the additional property that its internal borders are along levelsets.
+Let $L$ be a connected linear subset of $G$. $S := \bigcup_{l \in L} l is a slope region with the additional property that its borders are along levelsets.$
 
 \emph{Proof:} Also follows from Theorem \ref{slope_iff_conn_lvlsets}.\hfill $\Box$
 \end{thm}
 
-Thus, decompositions of a Reeb Graph $G$ into connected linear subsets of $G$ are isomorphic to a Slope Region Decompositions with borders along levelsets, which are exactly the kind of slope region decompositions which BP produces.
 
 \section{BP And Other Segmentation Methods}
 \begin{itemize}
@@ -285,7 +277,7 @@ The BP algorithm as well as this paper are the result of a pattern recognition c
 
 \textsc{Alex Palmrich} was to develop and implement a recognizer for saddle points, for which he coded a framework to perform efficient local regression of arbitrary degree on grid-sampled functions in arbitrary dimension. The gradient of the regression function was used to determine singular points, while the eigenvalues $\lambda_i$ of the hessian matrix provided a classification of singular points into minima (all $\lambda_i>0$), valleys (some $\lambda_i=0$, the rest positive), degenerate points (all $\lambda_i=0$), saddles (some $\lambda_i$ positive, some negative), ridges (some $\lambda_i=0$, the rest negative) and maxima (all $\lambda_i<0$). This approach proved difficult to use in practice, as there were many parameters to choose, and the recognizer proved very sensitive to noise despite the smoothing resulting from regression over a big local environment. As such this fairly finished project was dropped in favor of developing BP.
 
-\textsc{Florian Bogner} was designing an similar algorithm to BP that assumed information about critical points as a given. It was supposed to use \textsc{Palmrich}'s recognizer in practice. However, as the recognizer wasn't perfect, it never reached satisfactory results and was also shelved, and energy was directed to the joint development of BP.
+\textsc{Florian Bogner} was to train a neural network as a recognizer for saddle points. He wrote a framework to generate test data through iterated concatenation of well-known functions. This data was to be searched for saddle points by \textsc{Palmrich}'s algorithm and then be used as training data for the network. Since the saddle detector proved unsatisfactory, this approach was also shelved, and energy was directed to the joint development of BP.
 
 Most of the theory behind BP as well as the actual code was conceived in direct interaction between both authors. Only some tidbits might be attributed to a single one of them, such as \textsc{Bogner}'s idea to swap halo components between regions, his proof of theorem \ref{slope_iff_conn_lvlsets}, or his code to generate an interactive display of the algorithm at work using pygame. \textsc{Palmrich} can be credited with the use of the halo data structure, the idea of moving along iso-surfaces for a speedup during the search of connected components, and the \emph{Motivating ...} chapters in this paper.
 
