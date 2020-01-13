@@ -140,7 +140,7 @@ Suppose there exists a $c \in \mathbb{R}$ with $L := f^{-1}(c) \cap A$ not path-
 
 $~$
 
-\begin{wrapfigure}{r}{0.4\textwidth}
+\begin{wrapfigure}{R}{0.4\textwidth}
 \centering
 \includegraphics[width=0.4\textwidth]{img/Rising_sun_lemma.png}
 \caption{Rising sun lemma}
@@ -174,6 +174,13 @@ $\gamma$ is a monotonic path from $x$ to $y$, thus $A$ is a slope region.
 We will now work our way to the central insights on which the border propagation algorithm (abbreviated to \emph{BP}) hinges.
 
 Slope regions can be constructed and grown in a straight-forward iterative manner by sweeping through the function values from lowest to highest. This is similar to the intuition employed in Morse theory\cite{MatsumotoYukio2002AitM}. Visualize a smooth, compact 2D surface in 3D space. Initially, our decomposition is empty, i.e. there are no slope regions (and we thus don't yet have an actual \emph{decomposition}).
+
+\begin{wrapfigure}{R}{0.4\textwidth}
+\centering
+\includegraphics[width=0.4\textwidth]{img/slope_evolution.png}
+\caption{Evolution of Regions during the algorithm.}
+\label{fig:evolution}
+\end{wrapfigure}
 
 Starting at the global minimum, we add a new region, containing only the argmin (i.e. a single point on the 2D image where the minimal value is taken). Imagine a water level rising from below the surface, up to the point of first contact. Now, there might be many points where the global minimum is taken. This will either be due to flat regions (\emph{plateaus}) on the surface, which we want to include into the single existing region, or it will be due to individual dales, which all have their lowest point at the same height.
 
@@ -217,7 +224,7 @@ x \sim y :\Leftrightarrow f(x) = f(y) = c ~\land ~ x ~\text{and}~ y ~\text{are p
 The \emph{Reeb-Graph} of $\Omega$ is $G := \Omega/_\sim$
 \end{defn}
 
-\begin{wrapfigure}{r}{0.4\textwidth}
+\begin{wrapfigure}{R}{0.4\textwidth}
 \centering
 \includegraphics[width=0.4\textwidth]{img/Reebgraph.png}
 \caption{Reeb Graph of Torus}
