@@ -357,7 +357,7 @@ class SlopeDecomposition:
                         openSet.add(neighbor)
         
         return False
-            
+
         
 if __name__ == "__main__":
 
@@ -371,114 +371,142 @@ if __name__ == "__main__":
 #    pic = Image.open("perlin_small.png")
     pic = Image.open("mediumTestImage.png")
 
-    data = np.array(pic)[..., 1]
-##    data = 255-data
+#    data = np.array(pic)[..., 1]
+#    data = 255-data
     
-##    data = np.random.randint(0, 255, size = (10, 10, 10))
+#    data = np.random.randint(0, 255, size = (10, 10, 10))
     
-    d=SlopeDecomposition(data)
-
+    import noise_gen
+    data = noise_gen.data(20, 3)
+    
+    d = SlopeDecomposition(data)
+    
+    dim = len(data.shape)
+    
     if profiling_mode:
         d.decompose()
-    else:
-
-        steps = 0
-
-        gen = d.doDecomposeStep()
-        def step():
-            try:
-                gen.__next__()
-            except StopIteration:
-                pass
+        exit()
 
 
+    steps = 0
 
-        alpha = 128
+    gen = d.doDecomposeStep()
+    def step():
+        try:
+            gen.__next__()
+        except StopIteration:
+            pass
+
+
+
+    alpha = 128
+    
+    import colorsys
+    
+    colors = []
+    for i in range(100):
+#        c = colorsys.hsv_to_rgb(1.61803*i % 1, rb(5,1), rb(5,1))
+#        c = colorsys.hsv_to_rgb(1.61803*i % 1, ru(0.75,1), ru(0.5,1))
+        c = colorsys.hsv_to_rgb(1.61803*i % 1, 1, 1-i/200)
+        colors.append((int(c[0]*255), int(c[1]*255), int(c[2]*255), alpha))
+
+
+    import pygame
+
+    print_debug_colors = False
+    
+    iso_line_debug_view = False
+    iso_line_every = 20
+    iso_line_offset = 0
+    
+    framerates = [1, 5, 10, 20, 60]
+    framerate_index = 4
+    
+    pixelsize = 5
+
+    pygame.init()
+    pygame.display.set_caption("Border Propagation")
+    clock = pygame.time.Clock()
+
+    def screeninit():
+        #TODO 3D render
+        global screen, region_surface, bordersize, screensize, scalefactor
         
-        import colorsys
-        
-        colors = []
-        for i in range(100):
-#            c = colorsys.hsv_to_rgb(1.61803*i % 1, rb(5,1), rb(5,1))
-            #c = colorsys.hsv_to_rgb(1.61803*i % 1, ru(0.75,1), ru(0.5,1))
-            c = colorsys.hsv_to_rgb(1.61803*i % 1, 1, 1-i/200)
-            colors.append((int(c[0]*255), int(c[1]*255), int(c[2]*255), alpha))
-
-
-        import pygame
-
-        print_debug_colors = False
-        
-        iso_line_debug_view = False
-        iso_line_every = 20
-        iso_line_offset = 0
-        
-        framerates = [1, 5, 10, 20, 60]
-        framerate_index = 4
-        
-        pixelsize = 5
-
-        pygame.init()
-        pygame.display.set_caption("Border Propagation")
-        clock = pygame.time.Clock()
-
-        def screeninit():
-            #TODO 3D render
-            global screen, region_surface, bordersize
-
+        if dim == 2:            
             bordersize = pixelsize//3
             screensize = (pixelsize * data.shape[0], pixelsize * data.shape[1])
+        elif dim == 3:
+            screensize = (1000, 1000)
+            scalefactor = max(data.shape)/2
 
-            screen = pygame.display.set_mode(screensize)
-
-            region_surface = pygame.Surface(screensize, flags = pygame.SRCALPHA)
-            region_surface.set_alpha(alpha)
-
-        screeninit()
         
-        def draw(highlight_point = None, highlight_area = None):
-            global done, steps, print_debug_colors, pixelsize, iso_line_debug_view
-            global iso_line_every, iso_line_offset, framerate_index
-            
-            # --- Main event loop
-            for event in pygame.event.get(): # User did something
-                if event.type == pygame.QUIT: # If user clicked close
-                    done = True # Flag that we are done so we exit this loop
-                if event.type == pygame.KEYDOWN:
-                    if event.key in [pygame.K_ESCAPE, pygame.K_BACKSPACE, pygame.K_F4]:
-                        done = True
-                    elif event.key == pygame.K_SPACE:
-                        steps += 1
-                    elif event.key == pygame.K_RIGHT:
-                        steps += 10
-                    elif event.key == pygame.K_UP:
-                        steps += 256
-                    elif event.key == pygame.K_DOWN:
-                        steps = 0
-                    elif event.key == pygame.K_F5:
-                        print_debug_colors = not print_debug_colors
-                    elif event.key == pygame.K_KP_PLUS:
-                        pixelsize += 1
-                        screeninit()
-                    elif event.key == pygame.K_KP_MINUS:
-                        pixelsize -= 1 * (pixelsize > 1)
-                        screeninit()
-                    elif event.key == pygame.K_F6:
-                        iso_line_debug_view = not iso_line_debug_view
-                    elif event.key == pygame.K_i:
-                        iso_line_every += 1
-                    elif event.key == pygame.K_k:
-                        iso_line_every = max(iso_line_every-1, 2)
-                    elif event.key == pygame.K_o:
-                        iso_line_offset += 1
-                    elif event.key == pygame.K_l:
-                        iso_line_offset -= 1
-                    elif event.key == pygame.K_F7:
-                        framerate_index = max(framerate_index - 1, 0)
-                    elif event.key == pygame.K_F8:
-                        framerate_index = min(framerate_index + 1, len(framerates) - 1)
-                        
-                        
+        screen = pygame.display.set_mode(screensize)
+
+        region_surface = pygame.Surface(screensize, flags = pygame.SRCALPHA)
+        region_surface.set_alpha(alpha)
+
+    screeninit()
+    
+    scale = 300
+    phi = 0.3
+    theta = 0.2
+    
+    def draw(highlight_point = None, highlight_area = None):
+        global done, steps, print_debug_colors, pixelsize, iso_line_debug_view
+        global iso_line_every, iso_line_offset, framerate_index
+        global scale, phi, theta
+        
+        # --- Main event loop
+        for event in pygame.event.get(): # User did something
+            if event.type == pygame.QUIT: # If user clicked close
+                done = True # Flag that we are done so we exit this loop
+            if event.type == pygame.KEYDOWN:
+                if event.key in [pygame.K_ESCAPE, pygame.K_BACKSPACE, pygame.K_F4]:
+                    done = True
+                elif event.key == pygame.K_SPACE:
+                    steps += 1
+                elif event.key == pygame.K_RIGHT:
+                    steps += 10
+                elif event.key == pygame.K_UP:
+                    steps += 256
+                elif event.key == pygame.K_DOWN:
+                    steps = 0
+                elif event.key == pygame.K_F5:
+                    print_debug_colors = not print_debug_colors
+                elif event.key == pygame.K_KP_PLUS:
+                    pixelsize += 1
+                    screeninit()
+                elif event.key == pygame.K_KP_MINUS:
+                    pixelsize -= 1 * (pixelsize > 1)
+                    screeninit()
+                elif event.key == pygame.K_F6:
+                    iso_line_debug_view = not iso_line_debug_view
+                elif event.key == pygame.K_i:
+                    iso_line_every += 1
+                elif event.key == pygame.K_k:
+                    iso_line_every = max(iso_line_every-1, 2)
+                elif event.key == pygame.K_o:
+                    iso_line_offset += 1
+                elif event.key == pygame.K_l:
+                    iso_line_offset -= 1
+                elif event.key == pygame.K_F7:
+                    framerate_index = max(framerate_index - 1, 0)
+                elif event.key == pygame.K_F8:
+                    framerate_index = min(framerate_index + 1, len(framerates) - 1)
+                elif event.key == pygame.K_w:
+                    theta += 0.05
+                elif event.key == pygame.K_s:
+                    theta -= 0.05
+                elif event.key == pygame.K_d:
+                    phi += 0.05
+                elif event.key == pygame.K_a:
+                    phi -= 0.05
+                elif event.key == pygame.K_e:
+                    scale *= 1.1
+                elif event.key == pygame.K_q:
+                    scale /= 1.1
+                    
+        if dim == 2:            
             # 1. Draw data
             for i in range(data.shape[0]):
                 for j, v in enumerate(data[i]):
@@ -543,36 +571,79 @@ if __name__ == "__main__":
                                                                           pixelsize))
 
                 screen.blit(region_surface, (0,0))
-
-
-
-            pygame.display.flip()
-
-            clock.tick(framerates[framerate_index])
         
-        try:
-
-            done = False
-            while (not done):
+        elif dim == 3:
+            screen.fill((0,10,30))
+            
+            # 1. Prepare projection matrix
+            proj1 = np.array((( np.cos(theta), 0, np.sin(theta)),
+                              (             0, 1,             0),
+                              ( np.sin(theta), 0,-np.cos(theta))))
+            
+            proj2 = np.array((( np.cos(phi), np.sin(phi), 0),
+                              (-np.sin(phi), np.cos(phi), 0),
+                              (           0,           0, 1)))
+            
+            proj = scale * proj1 @ proj2
+            
+            
+            # 2. Draw Cube for debugging i guess
+            
+            for p in itertools.product([-1,1], repeat = 3):
+                depth, x, y = (proj @ p).astype(np.int) + (0, 500, 500)
+                shading = int((depth/scale/8 + 0.75)*255)
+                pygame.draw.circle(screen, (shading,)*3, (x, y), 2)
+            
+            # 3. prepare points for drawstep
+            points = []
+            for region in d.regions:
+                hue = 1.618 * region.id
+                for p in region.points:
+                    p = (np.array(p) - scalefactor) / scalefactor
+                    depth, x, y = (proj @ p).astype(np.int) + (0, 500, 500)
+                    shading = depth/scale/4 + 0.5
+                    color = tuple((np.array(colorsys.hsv_to_rgb(hue, 1, shading)) * 255).astype(np.int))
+                    points.append((depth, (x,y), color))
+            
+            # sort points by depth
+            points = sorted(points, key = lambda x:x[0])
+                    
+            # 4. draw points
+            for depth, pixelpos, color in points:
+                pygame.draw.circle(screen,
+                                   color,
+                                   pixelpos,
+                                   5)
                 
-                if steps > 0:
-                    steps -= 1
-                    step()
+            
+            
+        pygame.display.flip()
 
-                draw()
-                
+        clock.tick(framerates[framerate_index])
+    
+    try:
 
-        finally:
-            pygame.quit()
+        done = False
+        while (not done):
+            
+            if steps > 0:
+                steps -= 1
+                step()
+
+            draw()
+            
+
+    finally:
+        pygame.quit()
 
 
 
-        # Note: Reeb-Graphs
-        # Countour Tree
-        # Maximally Stable Extremal Regions
-        # Watershed
+    # Note: Reeb-Graphs
+    # Countour Tree
+    # Maximally Stable Extremal Regions
+    # Watershed
 
-        # create monkey_saddle.png
+    # create monkey_saddle.png
 
 
 
