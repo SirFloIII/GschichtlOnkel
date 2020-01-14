@@ -55,8 +55,9 @@
 
 \section{Abstract}
 
-TODO
-mention slope regions as defined in here\cite{kropatsch2019space}
+We introduce the \emph{border propagation} (BP) algorithm, which decomposes a $d$-dimensional array of scalar values into slope regions. Slope regions as defined in \cite{kropatsch2019space} and their prerequisites are defined in the fist two sections. The algorithm is sketched in sections 4-5, linked to the Reeb Graph in section 6 and compared to other decompositions in section 7.
+
+Please take a look at the commented code at \href{https://github.com/SirFloIII/MustererkennungLVA}{our git repository}!\footnote{\url{https://github.com/SirFloIII/MustererkennungLVA}}
 
 \section{Motivating Slope Regions}
 
@@ -208,7 +209,7 @@ Imagine a water level rising from below the surface, up to the point of first co
 Starting at this global minimum, we add a new region, containing only the argmin (i.e. a single point on the 2D image where the minimal value is taken).
 
 Now, there might be many points where the global minimum is taken.
-This will either be due to flat regions (\emph{plateaus}) on the surface, which we want to include into the single existing region, or it will be due to individual dales, which all have their lowest point at the same height.
+This will either be due to a flat region (\emph{plateau}) on the surface, which we want to include into the single existing region, or it will be due to individual dales, which all have their lowest point at the same height.
 In this second case, we can't put the points into the existing region, because we would not be able to get from one argmin to another via a monotonic path.
 Instead, we need to add a new region for each individual dale.
 
@@ -234,13 +235,23 @@ The same algorithm can be applied in higher dimensions. We deal with iso-hyper-s
 The somewhat vague description of BP in the previous section assumed a continuous surface. In most applications however, the data will be provided in a discrete raster format. Some intricacies arise from this discretization, most notably iso-surfaces of a smooth function $f$ will not have a straight-forward representation in the discrete grid obtained from rasterizing $f$.
 
 As a result, there are multiple ways to define what a \emph{discrete slope region} is supposed to be.
-Let us first explore, why the most immediate choice for a definition is in fact a bad one:
-%we assume continuous data, allow some disconnected levelsets being treated as connectes
-%we use halos
-%we test for connectedness locally
-%heuristic of halo assign for low noise impact
-%link to git
-% theorem: any two regions border only at a single height
+Let us first explore, why the most immediate choice for a definition is in fact a bad one.
+Using the discrete notion of connectedness, allowing discrete paths to move only axially (or at best diagonally) each step, one can define a slope region:
+$R$ is a slope region iff any two points in $R$ can be connected via a monotonic discrete path contained in $R$.
+
+There is a simple example to demonstrate that this definition is a bad one: Imagine a plane which is at a slant, such that it isn't parallel to any of the axes. Clearly a sensible slope decomposition would assign the entire plane to a single region.
+But let's look at what happens after discretization.
+Due to the slant, the points in successive levelsets or even within a single one will not be adjacent to each other, but rather spaced out.
+Many regions will be generated, because these points are not considered connected, even though we know that on the continuous surface they are linked by a levelset.
+
+It is precisely this realization that led the authors to the BP algorithm. Every region consists of the points already added to it, but the region also remembers its \emph{halo}, which is a set of unassigned points directly (axially, not diagonally) adjacent to the region points. The halo can be seen as the direction into which the region is allowed to expand. This data structure models the continuous level set connectedness.
+
+The search for the connected components of a level set in the continuous case corresponds to the search of connected components of the halo in the space of all unassigned points. This search is computationally expensive and has to be performed whenever a point is assigned to a region, which is why a very fast test is done first: Only if the halo is disconnected within a small local environment, do we jump into the global test.
+
+Much like connected components need to be assigned to colliding regions in the continuous case, the same has to be done in the discrete world. BP achieves this by distributing halo components among the involved regions. The heuristic chosen by the authors to decide which region gets which component is as follows: The component which allows for expansion towards the biggest chunk of unassigned points gets assigned to the involved region with the lowest minimum. The component allowing for second largest expansion gets assigned to the involved region with the second lowest minimum, etc. The intent is to prefer the construction of large regions which reflect the topology well, and to freeze tiny regions, since they have a good chance of resulting from noise.
+
+
+By iterating over the levelsets and swapping entire halo components, BP effectively ensures that the borders between regions are on the discretized equivalent of a continuous levelset. This property allows for an interesting characterization related to Reeb Graphs, as shown in the next section.
 
 \section{BP And Reeb Graph}
 
