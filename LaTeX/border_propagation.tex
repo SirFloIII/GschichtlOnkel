@@ -230,7 +230,7 @@ With the water rising further still, the regions will grow upwards to a point wh
 
 If the points remain connected, then we have to decide for a single one of the involved regions to be allowed to grow upwards from the component. This means that one region effectively inherits the growth directions from the other region(s). The other region(s) lose their potential for expansion and remain frozen in their current state.
 
-If the unassigned points have multiple components (as in Figure \ref{fig:evolution}, Image 3: the unassigned grey points are separated into the lower left and upper right areas), then we may assign one component to each involved region. The regions will then grow only in the directions determined by the assigned components as the water rises. This can be observed in Figure \ref{fig:evolution}, Image 4: The green region is allowed to grow to the lower left, while the red region floods the upper right. The same procedure of swapping areas of expansion also happens as we move from Image 5 to 6. Any region without an assigned component remains frozen. Should there be more components than regions, then we open up a new region for each surplus component.
+If the unassigned points have multiple components (as in Figure \ref{fig:evolution}, Image 3: the unassigned grey points are separated into the lower left and upper right areas), then we may assign one component to each involved region. The regions will then grow only in the directions determined by the assigned components as the water rises. This can be observed in Figure \ref{fig:evolution}, Image 4: The green region is allowed to grow to the lower left, while the red region floods the upper right. The same procedure of swapping areas of expansion also happens as we move from Image 5 to 6. Any region without an assigned component remains frozen. Should there be more components than regions, then we open up a new region for each surplus component, as in the top of Image 7.
 
 An oddity which can occur are self-loops: A region might grow into a "C"-shape, and then proceed to close up into an "O"-shape. This case can be treated similarly as above, the only difference is that the saddle is found by recognizing that the region collides with itself, instead of with another region.
 
@@ -238,7 +238,7 @@ Eventually this procedure will arrive at the global maximum, and the entire surf
 
 The same algorithm can be applied in higher dimensions. We deal with iso-hyper-surfaces as level sets, but the topological considerations about connectedness remain the same as in the illustrative 2D case.
 
-\section{Details About BP}
+\section{Discrete BP}
 \label{sec:details}
 
 The somewhat vague description of BP in the previous section assumed a continuous surface. In most applications, however, the data will be provided in a discrete raster format. Some intricacies arise from this discretization, most notably iso-surfaces of a smooth function $f$ will not have a straight-forward representation in the discrete grid obtained from rasterizing $f$.
