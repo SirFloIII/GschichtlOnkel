@@ -244,18 +244,18 @@ The same algorithm can be applied in higher dimensions. We deal with iso-hyper-s
 The somewhat vague description of BP in the previous section assumed a continuous surface. In most applications, however, the data will be provided in a discrete raster format. Some intricacies arise from this discretization, most notably iso-surfaces of a smooth function $f$ will not have a straight-forward representation in the discrete grid obtained from rasterizing $f$.
 
 As a result, there are multiple ways to define what a \emph{discrete slope region} is supposed to be.
-Let us first explore, why the most intuitive choice for a definition is in fact not suitable.
+Let us first explore, why the most obvious choice for a definition does not characterize the property we are interested in.
 Using the discrete notion of connectedness, allowing discrete paths to move only axially (or at best diagonally) each step, one can define a slope region:
 $R$ is a slope region iff any two points in $R$ can be connected via a monotonic discrete path contained in $R$.
 
-There is a simple example to demonstrate that this definition is a bad one: Imagine a plane which is at a slant, such that it isn't parallel to any of the axes. Clearly a sensible slope decomposition would assign the entire plane to a single region.
+There is a simple example to demonstrate that this definition is a bad one: Imagine a 2D plane, which is at a slant in 3D space, such that it isn't parallel to any of the 3 axes. For instance the graph of the function $f: \mathbb{R}^2 \rightarrow \mathbb{R}: (x,y)\mapsto x+y$. Clearly a sensible slope decomposition would assign the entire plane to a single region.
 But let's look at what happens after discretization.
-Due to the slant, the points in successive levelsets or even within a single one will not be adjacent to each other, but rather spaced out.
+Due to the slant, the points in successive levelsets or even within a single one will not be adjacent to each other, but rather spread out.
 Many regions will be generated, because these points are not considered connected, even though we know that on the continuous surface they are linked by a levelset.
 
-It is precisely this realization that led the authors to the BP algorithm. Every region consists of the points already added to it, but the region also remembers its \emph{halo}, which is a set of unassigned points directly (axially, not diagonally) adjacent to the region points. The halo can be seen as the direction into which the region is allowed to expand. This data structure models the continuous level set connectedness.
+It is precisely this realization that led the authors to the BP algorithm. Every region consists of the points already added to it, but the region also remembers its \emph{halo}, which is a set of unassigned points directly (axially, not diagonally) adjacent to the region points. The halo can be seen as the direction into which the region is allowed to expand. This data structure models the continuous level set connectedness. In Figure \ref{fig:evolution} the halo of a region is shown as tiny dots of the same color as the region.
 
-The search for the connected components of a level set in the continuous case corresponds to the search of connected components of the halo in the space of all unassigned points. This search is computationally expensive and has to be performed whenever a point is assigned to a region, which is why a very fast test is done first: Only if the halo is disconnected within a small local environment, do we jump into the global test.
+The search for the connected components of a level set in the continuous case corresponds to the search of connected components of the halo in the space of all unassigned points. This search is computationally expensive and would have to be performed whenever a point is assigned to a region, which is why a very fast test is done first: Only if the halo is disconnected within a small local environment, a global test is performed.
 
 Much like connected components need to be assigned to colliding regions in the continuous case, the same has to be done in the discrete world. BP achieves this by distributing halo components among the involved regions. The heuristic chosen by the authors to decide which region gets which component is as follows: The component which allows for expansion towards the biggest chunk of unassigned points gets assigned to the involved region with the lowest minimum. The component allowing for second largest expansion gets assigned to the involved region with the second lowest minimum, etc. The intent is to prefer the construction of large regions which reflect the topology well, and to freeze tiny regions, since they have a good chance of resulting from noise.
 
@@ -326,7 +326,11 @@ Other additional features that the authors considered are:
 \begin{itemize}
 \item An animated render of slope regions being build, for 3D data, showing different regions as point clouds of different colors.
 \item Generating the Reeb graph from the slope region decomposition.
-\item Providing a \emph{tolerance} parameter, which governs how steep a continuous function might get, before an iso-surface is deemed disconnected in the discrete data. This would allow for a trade-off between connectedness which reflects the continuous case, but might yield fragmented regions on the discrete data, and a connectedness which is more geared towards the discrete concept of connectedness, at the cost of an increased number of regions.
+\item Providing a \emph{tolerance} parameter, which governs how steep a continuous function might get, before an iso-surface is deemed disconnected in the discrete data.
+This would allow for a trade-off between continuous connectedness and discrete connectedness.
+Modeling continuous connectedness creates fewer slope regions and yields pleasing results on smooth data, but the resulting regions are not monotonically connected (in the discrete sense of \emph{connected}) in general.
+Discrete connectedness guarantees monotonic connectedness, but it necessarily creates significantly more and smaller slope regions.
+On smooth data the latter tends to produce too fine of a decomposition.
 \item Using established data structures that model smooth level sets from discrete data. There might be performance gains in employing such a data structure.
 \end{itemize}
 
