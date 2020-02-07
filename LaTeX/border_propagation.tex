@@ -193,13 +193,13 @@ $\gamma$ is a monotonic path from $x$ to $y$, thus $A$ is a slope region.
 
 
 \section{Motivating The Border Propagation (BP) Algorithm}
-Now we will work our way to the central insights on which the border propagation algorithm (abbreviated to \emph{BP}) hinges.
+Now we will work our way to the central insights on which the border propagation algorithm (\emph{BP}) hinges.
 
 Slope regions can be constructed and grown in a straight-forward iterative manner by sweeping through the function values from lowest to highest. 
 This is similar to the intuition employed in Morse theory\cite{MatsumotoYukio2002AitM}.
 Visualize a smooth, compact 2D surface in 3D space.
 We want to decompose this surface into slope regions.
-Initially, our decomposition is empty, i.e. there are no slope regions (thus we don't have an actual \emph{decomposition} yet).
+Initially, our decomposition is empty, i.e. there are no slope regions (thus we don't have an actual \emph{decomposition} yet). This is shown in Figure \ref{fig:evolution}, Image 1.
 
 \begin{wrapfigure}{R}{0.4\textwidth}
 \centering
@@ -220,13 +220,13 @@ Both cases can be dealt with by contracting connected points into their connecte
 
 As the water rises, we can add points to an existing region growing it upwards if they are just outside the region\footnote{Why can we do that?
 By adding only points which are connected to the region we ensure path-connectedness, and by growing the region upwards, we can construct ascending paths from old points to new ones.
-The smoothness of the surface guarantees that while moving at a fixed height, we can reach all points of the region with that height.}. Otherwise they correspond to a distant local minimum and have to be dealt with as before, by opening a new region for each point (or rather, each connected component).
+The smoothness of the surface guarantees that while moving at a fixed height, we can reach all points of the region with that height.}. Otherwise they correspond to a distant local minimum and have to be dealt with as before, by opening a new region for each point (or rather, each connected component). This is shown in Figure \ref{fig:evolution}, Image 2.
 
-With the water rising further still, the regions will grow upwards to a point where they meet. Any such point is a saddle point, and we have to account for it the next time we want to grow any one of the touching regions. The saddle point connects the edges of the regions which meet in it, at the current height of the water level. It might be the case that the not-yet-assigned points (the ones above the water) get separated into multiple connected components, or they might remain connected.
+With the water rising further still, the regions will grow upwards to a point where they meet (Figure \ref{fig:evolution}, Image 3). Any such point is a saddle point, and we have to account for it the next time we want to grow any one of the touching regions. The saddle point connects the edges of the regions which meet in it, at the current height of the water level. It might be the case that the not-yet-assigned points (the ones above the water) get separated into multiple connected components, or they might remain connected.
 
 If the points remain connected, then we have to decide for a single one of the involved regions to be allowed to grow upwards from the component. This means that one region effectively inherits the growth directions from the other region(s). The other region(s) lose their potential for expansion and remain frozen in their current state.
 
-If the unassigned points have multiple components, then we may assign one component to each involved region. The regions will then grow only in the directions determined by the assigned components as the water rises. Any region without an assigned component remains frozen. Should there be more components than regions, then we open up a new region for each surplus component.
+If the unassigned points have multiple components (as in Figure \ref{fig:evolution}, Image 3: the unassigned grey points are separated into the lower left and upper right areas), then we may assign one component to each involved region. The regions will then grow only in the directions determined by the assigned components as the water rises. This can be observed in Figure \ref{fig:evolution}, Image 4: The green region is allowed to grow to the lower left, while the red region floods the upper right. The same procedure of swapping areas of expansion also happens as we move from Image 5 to 6. Any region without an assigned component remains frozen. Should there be more components than regions, then we open up a new region for each surplus component.
 
 An oddity which can occur are self-loops: A region might grow into a "C"-shape, and then proceed to close up into an "O"-shape. This case can be treated similarly as above, the only difference is that the saddle is found by recognizing that the region collides with itself, instead of with another region.
 
