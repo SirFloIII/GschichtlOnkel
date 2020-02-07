@@ -55,7 +55,7 @@
 
 \section{Abstract}
 
-We review theory about Slope Regions and prove a theorem linking monotonic paths and the connectedness of levelsets. We introduce the \emph{border propagation} (BP) algorithm, which decomposes a $d$-dimensional array of scalar values into slope regions. Contrary to previous algorithms it can deal with data of arbitrary dimension.
+We review theory about slope regions (see \cite{kropatsch2019space}) and prove a theorem linking monotonic paths and the connectedness of levelsets. We introduce the \emph{border propagation} (BP) algorithm, which decomposes a $d$-dimensional array of scalar values into slope regions. Contrary to previous algorithms it can deal with data of arbitrary dimension.
 
 
 %Slope regions as defined in \cite{kropatsch2019space} and their prerequisites are defined in the fist two sections. The algorithm is sketched in sections 4-5, linked to the Reeb Graph in section 6 and compared to other decompositions in section 7.
@@ -63,6 +63,7 @@ We review theory about Slope Regions and prove a theorem linking monotonic paths
 Please take a look at the commented code at \href{https://github.com/SirFloIII/MustererkennungLVA}{our git repository}.\footnote{\url{https://github.com/SirFloIII/MustererkennungLVA}}
 
 \section{Motivating Slope Regions}
+\label{sec:motivating_slope_regions}
 
 In this section we try to develop an intuitive understanding of the term \emph{slope region} and its generalization to dimensions higher than 2. The concise definitions of the terms already employed here is reserved for the next section.
 
@@ -83,6 +84,7 @@ We want to partition the 3D volume, such that any two points in a region can be 
 By abstracting from image and tomography to a real function defined on some subset of $\mathbb{R}^n$ (think of it as the brightness function!), and by rigorously defining a coarsest slope decomposition, we can lift the concept to arbitrary dimensions in a mathematically concise fashion.
 
 \section{Defining Slope Regions}
+\label{sec:definitions}
 
 %In this and the following chapters we will consider a set $\Omega \subset \mathbb{R}^n$ with $n > 1$ and a continuous function $f: \Omega \to \mathbb{R}$.
 
@@ -133,7 +135,7 @@ A family of sets $\left\{ A_i \subset \Omega \mid i \in I \right\}$ is called a 
 
 
 \begin{defn}
-Consider two slope region decompositions $\mathcal{A} = \left\{ A_i \subset \Omega \mid i \in I \right\}$ and $\mathcal{B} = \left\{ B_j \subset \Omega \mid j \in J \right\}$. We call $\mathcal{A}$ \emph{coarser than} $\mathcal{B}$, in Symbols $\mathcal{A} \succeq \mathcal{B}$ if and only if
+Consider two slope region decompositions $\mathcal{A} = \left\{ A_i \subset \Omega \mid i \in I \right\}$ and $\mathcal{B} = \left\{ B_j \subset \Omega \mid j \in J \right\}$. We call $\mathcal{A}$ \emph{coarser than} $\mathcal{B}$, alternativly $\mathcal{B}$ \emph{finer than} $\mathcal{A}$, in Symbols $\mathcal{A} \succeq \mathcal{B}$ if and only if
 \begin{equation*}
 \forall j \in J ~ \exists \, i \in I: B_j \subset A_i.
 \end{equation*}
@@ -193,6 +195,8 @@ $\gamma$ is a monotonic path from $x$ to $y$, thus $A$ is a slope region.
 
 
 \section{Motivating The Border Propagation (BP) Algorithm}
+\label{sec:motivating_BP}
+
 Now we will work our way to the central insights on which the border propagation algorithm (\emph{BP}) hinges.
 
 Slope regions can be constructed and grown in a straight-forward iterative manner by sweeping through the function values from lowest to highest. 
@@ -235,6 +239,8 @@ Eventually this procedure will arrive at the global maximum, and the entire surf
 The same algorithm can be applied in higher dimensions. We deal with iso-hyper-surfaces as level sets, but the topological considerations about connectedness remain the same as in the illustrative 2D case.
 
 \section{Details About BP}
+\label{sec:details}
+
 The somewhat vague description of BP in the previous section assumed a continuous surface. In most applications, however, the data will be provided in a discrete raster format. Some intricacies arise from this discretization, most notably iso-surfaces of a smooth function $f$ will not have a straight-forward representation in the discrete grid obtained from rasterizing $f$.
 
 As a result, there are multiple ways to define what a \emph{discrete slope region} is supposed to be.
@@ -257,32 +263,33 @@ Much like connected components need to be assigned to colliding regions in the c
 By iterating over the levelsets and swapping entire halo components, BP effectively ensures that the borders between regions are on the discretized equivalent of a continuous levelset. This property allows for an interesting characterization related to Reeb Graphs, as shown in the next section.
 
 \section{BP And Reeb Graph}
+\label{sec:reeb}
 
-There is a significant connection between Reeb Graphs and Slope Region Decompositions.
+There is a significant connection between Reeb graphs and slope region decompositions.
 
 \begin{defn}
 Let $(\Omega, \mathcal T)$ be a topological space, and $f: \Omega \to \mathbb R$ continuous. We define an equivalence relation for $x,y \in \Omega$: 
 \begin{equation*}
 x \sim y :\Leftrightarrow f(x) = f(y) = c ~\land ~ x ~\text{and}~ y ~\text{are path-connected in}~ f^{-1}(c)
 \end{equation*}
-The \emph{Reeb-Graph} of $\Omega$ is $G := \Omega/_\sim$
+The \emph{Reeb graph} of $\Omega$ is $G := \Omega/_\sim$
 \end{defn}
 
 \begin{wrapfigure}{R}{0.4\textwidth}
 \centering
 \includegraphics[width=0.4\textwidth]{img/Reebgraph.png}
-\caption{Reeb Graph of Torus}
+\caption{Reeb graph of Torus}
 \label{fig:reeb_torus}
 \end{wrapfigure}
 
 \begin{exmp}
-Let $\Omega$ be a torus on its side and $f$ be the distance from the ground. Its Reeb Graph is depicted in Figure \ref{fig:reeb_torus}.
+Let $\Omega$ be a torus on its side and $f$ be the distance from the ground. Its Reeb graph is depicted in Figure \ref{fig:reeb_torus}.
 \end{exmp}
 
-In general, a Reeb Graph consists of vertices and lines between them. Vertices correspond to critical points of $f$. They are local extrema iff their rank is $1$ and saddle points iff their rank is bigger than $2$.
+In general, a Reeb graph consists of vertices and lines between them. Vertices correspond to critical points of $f$. They are local extrema iff their rank is $1$ and saddle points iff their rank is bigger than $2$.
 
 \begin{thm}
-Let $S$ be a Slope Region. $S/_\sim$ may intersect no more than one point of $G$ at a given height.
+Let $S$ be a slope region. $S/_\sim$ may intersect no more than one point of $G$ at a given height.
 
 \emph{Proof:} Follows from Theorem \ref{slope_iff_conn_lvlsets}.\hfill $\Box$
 \end{thm}
@@ -295,30 +302,30 @@ Let $L$ be a connected linear subset of $G$. $S := \bigcup_{l \in L} l$ is a slo
 \emph{Proof:} Also follows from Theorem \ref{slope_iff_conn_lvlsets}.\hfill $\Box$
 \end{thm}
 
-Thus, decompositions of a Reeb Graph $G$ into connected linear subsets of $G$ are isomorphic to Slope Region Decompositions with borders along levelsets, which are exactly the kind of slope region decompositions which BP produces.
+Thus, decompositions of a Reeb graph $G$ into connected linear subsets of $G$ are isomorphic to slope region decompositions with borders along levelsets, which are exactly the kind of slope region decompositions which BP produces.
 
 
 \section{BP And Other Segmentation Methods}
 \begin{itemize}
 \item BP might be considered a \href{https://en.wikipedia.org/wiki/Level-set_method}{level set method}.
-\item Even though the algorithm was motivated using a rising water surface, it is indeed very different from the seemingly similar \href{https://en.wikipedia.org/wiki/Watershed_(image_processing)}{watershed algorithm} both in its mechanics and resulting segmentation.
-\item Much like \href{https://en.wikipedia.org/wiki/Maximally_stable_extremal_regions}{maximally stable extremal regions method}, regions are grown around extrema in BP. But slope regions need not be extremal (in the sense that either all points in the region are above any point on the border, or all points are below), and neither is their broder maximally stable. In fact borders of slope regions will change quite drastically by sliding them up or down, as they will change their topology by passing a saddle point.
+\item Even though the algorithm was motivated using a rising water surface, it is indeed very different from the seemingly similar \href{https://en.wikipedia.org/wiki/Watershed_(image_processing)}{watershed algorithm} both in its mechanics and resulting segmentation. Watershed searches for drainage basins, and a drainage basin can contain multiple coarse slope regions. (Consider a bumpy hillside.) A slope region can also be spread over multiple drainage basins. (Consider a mountaintop which is a slope region, but whose ridge is the border between drainage basins.)
+\item Much like \href{https://en.wikipedia.org/wiki/Maximally_stable_extremal_regions}{maximally stable extremal regions method}, regions are grown around extrema in BP. But slope regions do not have to be extremal (in the sense that either all points in the region are above any point on the border, or all points are below), and neither is their border maximally stable. In fact, borders of slope regions will change quite drastically by sliding them up or down, as they will change their topology by passing a saddle point.
 \end{itemize}
 
 
 \section{Further Potential Development}
 The result of BP is satisfactory, but the authors assume that improvements can be made in running time. The code was profiled multiple times and has been adapted to run faster with significant gains in many instances.
 
-Most of the CPU cycles get eaten by the search for connected components (as of writing this document). We have already put efficient preliminary tests into place in order to minimize the calls to these expensive searches. Yet two runtime improvements came to the authors' minds:
+Most of the CPU cycles are spent searching for connected components (as of writing this document). We have already put efficient preliminary tests into place in order to minimize the calls to these expensive searches. Yet two runtime improvements came to the authors' minds:
 \begin{itemize}
 \item Growing regions not by a random choice from their halo, but from a priority queue, with new halo points being added to the end of the queue. This will reduce cases where self-collisions of regions are triggered, which require a call to the expensive search in order to be handled correctly.
 \item Making the expensive search itself more efficient: Searching for components with the A* algortihm, and encouraging the search to move along iso-surfaces. This will terminate the search far earlier in cases where there is only one component to be found, potentially reducing the complexity by one order for such calls. This optimization is being implemented as of writing.
 \end{itemize}
 
-Other additional features that the authors considered are
+Other additional features that the authors considered are:
 \begin{itemize}
 \item An animated render of slope regions being build, for 3D data, showing different regions as point clouds of different colors.
-\item Generating the Reeb Graph from the slope region decomposition.
+\item Generating the Reeb graph from the slope region decomposition.
 \item Providing a \emph{tolerance} parameter, which governs how steep a continuous function might get, before an iso-surface is deemed disconnected in the discrete data. This would allow for a trade-off between connectedness which reflects the continuous case, but might yield fragmented regions on the discrete data, and a connectedness which is more geared towards the discrete concept of connectedness, at the cost of an increased number of regions.
 \item Using established data structures that model smooth level sets from discrete data. There might be performance gains in employing such a data structure.
 \end{itemize}
@@ -328,11 +335,11 @@ Another interesting experiment would involve generating the Reeb Graph via an ex
 \section{Authors' Individual Contributions}
 The BP algorithm as well as this paper are the result of a pattern recognition course held at the \href{https://www.tuwien.at/en/}{Vienna University Of Technology} from Oct 2019 till Jan 2020. Professor \textsc{Kropatsch} introduced us to the concept of slope regions and posed the challenge to compute them in high dimensions ($>2$). Initially both authors were tasked with small building blocks for this endeavor:
 
-\textsc{Alex Palmrich} was to develop and implement a recognizer for saddle points, for which he coded a framework to perform efficient local regression of arbitrary degree on grid-sampled functions in arbitrary dimension. The gradient of the regression function was used to determine singular points, while the eigenvalues $\lambda_i$ of the hessian matrix provided a classification of singular points into minima (all $\lambda_i>0$), valleys (some $\lambda_i=0$, the rest positive), degenerate points (all $\lambda_i=0$), saddles (some $\lambda_i$ positive, some negative), ridges (some $\lambda_i=0$, the rest negative) and maxima (all $\lambda_i<0$). This approach proved difficult to use in practice, as there were many parameters to choose, and the recognizer proved very sensitive to noise despite the smoothing resulting from regression over a big local environment. As such this fairly finished project was dropped in favor of developing BP.
+\textsc{Alex Palmrich} was to develop and implement a recognizer for saddle points, for which he coded a framework to perform efficient local regression of arbitrary degree on grid-sampled functions in arbitrary dimension. The gradient of the regression function was used to determine singular points, while the eigenvalues $\lambda_i$ of the hessian matrix provided a classification of singular points into minima (all $\lambda_i>0$), valleys (some $\lambda_i=0$, the rest positive), degenerate points (all $\lambda_i=0$), saddles (some $\lambda_i$ positive, some negative), ridges (some $\lambda_i=0$, the rest negative) and maxima (all $\lambda_i<0$). This approach turned out to be difficult to use in practice, as there were many parameters to choose, and the recognizer proved very sensitive to noise despite the smoothing resulting from regression over a big local environment. As such this fairly finished project was dropped in favor of developing BP.
 
 \textsc{Florian Bogner} was designing an algorithm similar to BP that assumed information about critical points as a given. It was supposed to use \textsc{Palmrich}'s recognizer in practice. However, as the recognizer wasn't perfect, it never reached satisfactory results and was also shelved, and energy was directed to the joint development of BP.
 
-Most of the theory behind BP as well as the actual code was conceived in direct interaction between both authors. Only some tidbits might be attributed to a single one of them, such as \textsc{Bogner}'s idea to swap halo components between regions, his proof of theorem \ref{slope_iff_conn_lvlsets}, or his code to generate an interactive display of the algorithm at work using pygame. \textsc{Palmrich} can be credited with the use of the halo data structure, the idea of moving along iso-surfaces for a speedup during the search of connected components, and the \emph{Motivating ...} chapters in this paper.
+Most of the theory behind BP as well as the actual code was conceived in direct interaction between both authors. Only some tidbits might be attributed to a single one of them, such as \textsc{Bogner}'s idea to swap halo components between regions, his proof of theorem \ref{slope_iff_conn_lvlsets}, or his code to generate an interactive display of the algorithm at work using pygame as well as chapters \ref{sec:definitions} and \ref{sec:reeb}. \textsc{Palmrich} can be credited with the use of the halo data structure, the idea of moving along iso-surfaces for a speedup during the search of connected components, and chapters \ref{sec:motivating_slope_regions}, \ref{sec:motivating_BP} and \ref{sec:details} in this paper.
 
 %TODO
 % images
