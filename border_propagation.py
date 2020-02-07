@@ -371,13 +371,13 @@ if __name__ == "__main__":
 #    pic = Image.open("perlin_small.png")
     pic = Image.open("mediumTestImage.png")
 
-#    data = np.array(pic)[..., 1]
+    data = np.array(pic)[..., 1]
 #    data = 255-data
     
 #    data = np.random.randint(0, 255, size = (10, 10, 10))
     
-    import noise_gen
-    data = noise_gen.data(20, 3)
+#    import noise_gen
+#    data = noise_gen.data(20, 3)
     
     d = SlopeDecomposition(data)
     

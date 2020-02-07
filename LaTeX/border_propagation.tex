@@ -35,7 +35,7 @@
 
 \begin{document}
 \author{\textsc{Florian Bogner} \& \textsc{Alexander Palmrich}}
-\title{Border Propagation: A Novel Approach To Determining Slope Region Decompositions}
+\title{Border Propagation: A Novel Approach To Determine Slope Region Decompositions}
 \maketitle
 
 \toccontents
@@ -55,15 +55,18 @@
 
 \section{Abstract}
 
-We introduce the \emph{border propagation} (BP) algorithm, which decomposes a $d$-dimensional array of scalar values into slope regions. Slope regions as defined in \cite{kropatsch2019space} and their prerequisites are defined in the fist two sections. The algorithm is sketched in sections 4-5, linked to the Reeb Graph in section 6 and compared to other decompositions in section 7.
+We review theory about Slope Regions and prove a theorem linking monotonic paths and the connectedness of levelsets. We introduce the \emph{border propagation} (BP) algorithm, which decomposes a $d$-dimensional array of scalar values into slope regions. Contrary to previous algorithms it can deal with arbitrary data.
 
-Please take a look at the commented code at \href{https://github.com/SirFloIII/MustererkennungLVA}{our git repository}!\footnote{\url{https://github.com/SirFloIII/MustererkennungLVA}}
+
+%Slope regions as defined in \cite{kropatsch2019space} and their prerequisites are defined in the fist two sections. The algorithm is sketched in sections 4-5, linked to the Reeb Graph in section 6 and compared to other decompositions in section 7.
+
+Please take a look at the commented code at \href{https://github.com/SirFloIII/MustererkennungLVA}{our git repository}.\footnote{\url{https://github.com/SirFloIII/MustererkennungLVA}}
 
 \section{Motivating Slope Regions}
 
 In this section we try to develop an intuitive understanding of the term \emph{slope region} and its generalization to dimensions higher than 2. The concise definitions of the terms already employed here is reserved for the next section.
 
-Consider an image, either gray-scale or in color. If it is a color image, it can be decomposed into its color channels (red-green-blue), which can individually be read as gray-scale images. We now think of the light intensity (i.e. the image value) of one such gray-scale image as the height of a landscape, yielding a surface in 3D space. The surface will have hills in areas where the image is bright, and will have dales in dark areas. Please refer to figure \ref{fig:conversion} for a visualization!
+Consider an image, either gray-scale or in color. If it is a color image, it can be decomposed into its color channels (red-green-blue), which can individually be read as gray-scale images. We now think of the light intensity (i.e. the image value) of one such gray-scale image as the height of a landscape, yielding a surface in 3D space. The surface will have hills in areas where the image is bright, and will have dales in dark areas. Please refer to Figure \ref{fig:conversion} for a visualization!
 
 
 \begin{figure}[h]
