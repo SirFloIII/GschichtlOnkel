@@ -319,7 +319,11 @@ Other additional features that the authors considered are
 \begin{itemize}
 \item An animated render of slope regions being build, for 3D data, showing different regions as point clouds of different colors.
 \item Generating the Reeb Graph from the slope region decomposition.
-\item Providing a \emph{tolerance} parameter, which governs how steep a continuous function might get, before an iso-surface is deemed disconnected in the discrete data. This would allow for a trade-off between connectedness which reflects the continuous case, but might yield fragmented regions on the discrete data, and a connectedness which is more geared towards the discrete concept of connectedness, at the cost of an increased number of regions.
+\item Providing a \emph{tolerance} parameter, which governs how steep a continuous function might get, before an iso-surface is deemed disconnected in the discrete data.
+This would allow for a trade-off between continuous connectedness and discrete connectedness.
+Modeling continuous connectedness creates fewer slope regions and yields pleasing results on smooth data, but the resulting regions are not monotonically connected (in the discrete sense of \emph{connected}) in general.
+Discrete connectedness guarantees monotonic connectedness, but it necessarily creates significantly more and smaller slope regions.
+On smooth data the latter tends to produce too fine of a decomposition.
 \item Using established data structures that model smooth level sets from discrete data. There might be performance gains in employing such a data structure.
 \end{itemize}
 
