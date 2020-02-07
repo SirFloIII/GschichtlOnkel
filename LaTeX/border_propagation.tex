@@ -238,7 +238,7 @@ The same algorithm can be applied in higher dimensions. We deal with iso-hyper-s
 The somewhat vague description of BP in the previous section assumed a continuous surface. In most applications, however, the data will be provided in a discrete raster format. Some intricacies arise from this discretization, most notably iso-surfaces of a smooth function $f$ will not have a straight-forward representation in the discrete grid obtained from rasterizing $f$.
 
 As a result, there are multiple ways to define what a \emph{discrete slope region} is supposed to be.
-Let us first explore, why the most intuitive choice for a definition is in fact not suitable.
+Let us first explore, why the most obvious choice for a definition does not characterize the property we are interested in.
 Using the discrete notion of connectedness, allowing discrete paths to move only axially (or at best diagonally) each step, one can define a slope region:
 $R$ is a slope region iff any two points in $R$ can be connected via a monotonic discrete path contained in $R$.
 
