@@ -38,7 +38,7 @@
 \title{Border Propagation: A Novel Approach To Determine Slope Region Decompositions}
 \maketitle
 
-\toccontents
+%\toccontents
 %
 %\begin{titlepage}
 %\huge
@@ -76,9 +76,9 @@ We consider pixel intensity of one such gray-scale image as the height of a land
 The surface will have peaks in areas where the image is bright, and will have dales in dark areas.
 Please refer to Figure \ref{fig:conversion} for a visualization!
 
-
 \begin{figure}[h]
-\includegraphics[width=\textwidth]{img/visu1.png}
+\centering
+\includegraphics[width=\textwidth*3/4]{img/visu1.png}
 \caption{gray-scale to height-map conversion}
 \label{fig:conversion}
 \end{figure}
@@ -186,9 +186,9 @@ Therefore, A is not a slope region.
 
 $~$
 
-\begin{wrapfigure}{R}{0.4\textwidth}
+\begin{wrapfigure}{R}{0.35\textwidth}
 \centering
-\includegraphics[width=0.4\textwidth]{img/Rising_sun_lemma.png}
+\includegraphics[width=0.35\textwidth]{img/Rising_sun_lemma.png}
 \caption{Rising Sun lemma}
 \label{fig:lemma_1}
 \end{wrapfigure}
@@ -240,9 +240,9 @@ Let $(\partial A_i)_{i\in I}$ be an enumeration of the connected components of t
 Then $\forall i \in I : f|_{\partial A_i}$ has at most one local minimum and one local maximum.
 \end{thm}
 
-\begin{wrapfigure}{R}{0.3\textwidth}
+\begin{wrapfigure}{R}{0.25\textwidth}
 \centering
-\includegraphics[width=0.3\textwidth]{img/sketch_border_thm.pdf}
+\includegraphics[width=0.25\textwidth]{img/sketch_border_thm.pdf}
 %\caption{Sketch of Proof.}
 \label{fig:sketch_1}
 \end{wrapfigure}
@@ -340,9 +340,9 @@ We want to decompose this surface into slope regions.
 Initially, our decomposition is empty, i.e. there are no slope regions (thus we don't have an actual \emph{decomposition} yet).
 This is shown in Figure \ref{fig:evolution}, Image 1.
 
-\begin{wrapfigure}{R}{0.4\textwidth}
+\begin{wrapfigure}{R}{0.3\textwidth}
 \centering
-\includegraphics[width=0.4\textwidth]{img/slope_evolution.png}
+\includegraphics[width=0.3\textwidth]{img/slope_evolution.png}
 \caption{evolution of discretized regions during the algorithm}
 \label{fig:evolution}
 \end{wrapfigure}
@@ -433,7 +433,16 @@ This property allows for an interesting characterization related to Reeb Graphs,
 \section{Slope Decompositions From Reeb Graph}
 \label{sec:reeb}
 
+\begin{wrapfigure}{R}{0.25\textwidth}
+\centering
+\includegraphics[width=0.25\textwidth]{img/Reebgraph.png}
+\caption{Reeb graph of the torus}
+\label{fig:reeb_torus}
+\end{wrapfigure}
+
+
 There is a significant connection between Reeb graphs and slope region decompositions.
+
 
 \begin{defn}
 Let $(\Omega, \mathcal T)$ be a topological space, and $f: \Omega \to \mathbb R$ continuous. We define an equivalence relation for $x,y \in \Omega$: 
@@ -442,13 +451,6 @@ x \sim y :\Leftrightarrow f(x) = f(y) = c ~\land ~ x ~\text{and}~ y ~\text{are p
 \end{equation*}
 The \emph{Reeb graph} of $\Omega$ is $G := \Omega/_\sim$
 \end{defn}
-
-\begin{wrapfigure}{R}{0.4\textwidth}
-\centering
-\includegraphics[width=0.4\textwidth]{img/Reebgraph.png}
-\caption{Reeb graph of the torus}
-\label{fig:reeb_torus}
-\end{wrapfigure}
 
 \begin{exmp}
 Let $\Omega$ be a torus on its side and $f$ be the distance from the ground.
