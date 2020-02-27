@@ -1,6 +1,6 @@
 %Florian Bogner & Alexander Palmrich
 
-\documentclass[a4paper,12pt,notitlepage,fullpage]{paper}
+\documentclass[a4paper,10pt,notitlepage,fullpage]{paper}
 \usepackage{fullpage}
 \usepackage[utf8]{inputenc}
 %\usepackage[ngerman]{babel}
@@ -19,6 +19,7 @@
 \usepackage{cite}
 \usepackage{wrapfig}
 \usepackage{hyperref}
+%\usepackage{multicol}
 
 \theoremstyle{plain}
 \newtheorem{thm}{Theorem}[section] % reset theorem numbering for each chapter
@@ -61,6 +62,8 @@ We review theory about slope regions (see \cite{kropatsch2019space}) and prove a
 %Slope regions as defined in \cite{kropatsch2019space} and their prerequisites are defined in the fist two sections. The algorithm is sketched in sections 4-5, linked to the Reeb Graph in section 6 and compared to other decompositions in section 7.
 
 Please take a look at the commented code at \href{https://github.com/SirFloIII/MustererkennungLVA}{our git repository}.\footnote{\url{https://github.com/SirFloIII/MustererkennungLVA}}
+
+%\begin{multicols}{2}
 
 \section{Motivating Slope Regions}
 \label{sec:motivating_slope_regions}
@@ -383,16 +386,6 @@ Now consider the point $(0,0,0)$. Along the $x$ and $y$-direction it is a local 
 \end{exmp}
 
 
-
-
-\section{BP And Other Segmentation Methods}
-\begin{itemize}
-\item BP might be considered a \href{https://en.wikipedia.org/wiki/Level-set_method}{level set method}.
-\item Even though the algorithm was motivated using a rising water surface, it is indeed very different from the seemingly similar \href{https://en.wikipedia.org/wiki/Watershed_(image_processing)}{watershed algorithm} both in its mechanics and resulting segmentation. Watershed searches for drainage basins, and a drainage basin can contain multiple coarse slope regions. (Consider a bumpy hillside.) A slope region can also be spread over multiple drainage basins. (Consider a mountaintop which is a slope region, but whose ridge is the border between drainage basins.)
-\item Much like \href{https://en.wikipedia.org/wiki/Maximally_stable_extremal_regions}{maximally stable extremal regions method}, regions are grown around extrema in BP. But slope regions do not have to be extremal (in the sense that either all points in the region are above any point on the border, or all points are below), and neither is their border maximally stable. In fact, borders of slope regions will change quite drastically by sliding them up or down, as they will change their topology by passing a saddle point.
-\end{itemize}
-
-
 \section{Further Potential Development}
 The result of BP is satisfactory, but the authors assume that improvements can be made in running time. The code was profiled multiple times and has been adapted to run faster with significant gains in many instances.
 
@@ -416,20 +409,11 @@ On smooth data the latter tends to produce too fine of a decomposition.
 
 Another interesting experiment would involve generating the Reeb Graph via an external library, dissecting it to generate a slope region decomposition, and then pitting the resulting algorithm against BP. Let the games begin!
 
-\section{Authors' Individual Contributions}
-The BP algorithm as well as this paper are the result of a pattern recognition course held at the \href{https://www.tuwien.at/en/}{Vienna University Of Technology} from Oct 2019 till Jan 2020. Professor \textsc{Kropatsch} introduced us to the concept of slope regions and posed the challenge to compute them in high dimensions ($>2$). Initially both authors were tasked with small building blocks for this endeavor:
-
-\textsc{Alex Palmrich} was to develop and implement a recognizer for saddle points, for which he coded a framework to perform efficient local regression of arbitrary degree on grid-sampled functions in arbitrary dimension. The gradient of the regression function was used to determine singular points, while the eigenvalues $\lambda_i$ of the hessian matrix provided a classification of singular points into minima (all $\lambda_i>0$), valleys (some $\lambda_i=0$, the rest positive), degenerate points (all $\lambda_i=0$), saddles (some $\lambda_i$ positive, some negative), ridges (some $\lambda_i=0$, the rest negative) and maxima (all $\lambda_i<0$). This approach turned out to be difficult to use in practice, as there were many parameters to choose, and the recognizer proved very sensitive to noise despite the smoothing resulting from regression over a big local environment. As such this fairly finished project was dropped in favor of developing BP.
-
-\textsc{Florian Bogner} was designing an algorithm similar to BP that assumed information about critical points as a given. It was supposed to use \textsc{Palmrich}'s recognizer in practice. However, as the recognizer wasn't perfect, it never reached satisfactory results and was also shelved, and energy was directed to the joint development of BP.
-
-Most of the theory behind BP as well as the actual code was conceived in direct interaction between both authors. Only some tidbits might be attributed to a single one of them, such as \textsc{Bogner}'s idea to swap halo components between regions, his proof of theorem \ref{slope_iff_conn_lvlsets}, or his code to generate an interactive display of the algorithm at work using pygame as well as chapters \ref{sec:definitions} and \ref{sec:reeb}. \textsc{Palmrich} can be credited with the use of the halo data structure, the idea of moving along iso-surfaces for a speedup during the search of connected components, and chapters \ref{sec:motivating_slope_regions}, \ref{sec:motivating_BP} and \ref{sec:details} in this paper.
-
-%TODO
-% images
-
 \bibliography{lit}
 \bibliographystyle{plain}
+
+%\end{multicols}
+
 \end{document}
 
 
