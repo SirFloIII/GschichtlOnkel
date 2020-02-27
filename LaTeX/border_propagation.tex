@@ -304,6 +304,86 @@ Let $L$ be a connected linear subset of $G$. $S := \bigcup_{l \in L} l$ is a slo
 
 Thus, decompositions of a Reeb graph $G$ into connected linear subsets of $G$ are isomorphic to slope region decompositions with borders along levelsets, which are exactly the kind of slope region decompositions which BP produces.
 
+\section{Results In The Plane And Counterexamples In Higher Dimensions}
+
+There are two theorems that are useful, but only hold if $\Omega \subset \mathbb R^2$, not if $\Omega \subset \mathbb R^d$ for $d > 2$. But first, a lemma.
+
+\begin{thm}
+Let $A$ be a slope region. Then the closure $\bar A$ is also a slope region.
+\end{thm}
+
+\emph{Proof:} Follows from continuity of $f$.
+
+\hfill $\Box$
+
+The following theorem is only formulated for closed slope regions, but because of the above theorem this is not a big restriction.
+
+\begin{thm}
+Let $d = 2$ and $A \subset \mathbb R^d$ be a closed slope region. Let $(\partial A_i)_{i\in I}$ be an enumeration of the connected components of the boundary $\partial A$. Then $\forall i \in I : f|_{\partial A_i}$ has at most one local minimum and one local maximum.
+\end{thm}
+
+\begin{wrapfigure}{R}{0.3\textwidth}
+\centering
+\includegraphics[width=0.3\textwidth]{img/sketch_border_thm.pdf}
+%\caption{Sketch of Proof.}
+\label{fig:sketch_1}
+\end{wrapfigure}
+
+\emph{Proof:} Assume there are two local minima $a_1, a_2 \in \partial A_i$ with $f(a_1) \leq f(a_2)$. Since $\partial A_i$ is connected, there has to be a point $b_1 \in \partial A_i$ between them with $f(a_2) > f(b_1)$. On the 'other side' of $a_2$ there has to be a point $b_2 \in \partial A_i$, also with $f(a_2) > f(b_2)$. Note that the 'other side' exists only because $\Omega = \mathbb R^2$ and thus $\partial A_i$ is a line.
+
+Since $A$ is a slope region, $a_1$ and $a_2$, as well as $b_1$ and $b_2$ have to be connected by a monotonic path. Because of the Jordan Curve Theorem, these paths have to cross in a point $c \in A$. But this yields a contradiction: $f(c) \leq f(a_2) < min(f(b_1), f(b_2)) \leq f(c)$. Thus the assumption of the existence of two local minima has to be false.
+
+\hfill $\Box$
+
+\begin{exmp}
+Let $\Omega = \mathbb R^3$ and $A = B_1(0,0,0)$ be the closed unit ball. Let $f$ be the distance to the $x$-Axis. 
+
+\begin{equation*}
+f: \mathbb R^3 \to \mathbb R: (x,y,z) \mapsto \sqrt{y^2 + z^2}
+\end{equation*}
+
+The levelsets of $f$ in $A$ are ether the $x$-Axis for $f \equiv 0$ or the sides of cylinders for $f > 0$. In any case, they are connected. Thus, by theorem \ref{slope_iff_conn_lvlsets}, $A$ is a slope region. $\partial A$ has one connected component, which is the unit sphere. $f|_{\partial A}$ has two local minima, which are the intersections with the $x$-Axis, $(1,0,0)$ and $(-1,0,0)$.
+\end{exmp}
+
+Thus, the previous theorem does not hold in $\mathbb R^3$. In fact, it does not hold in any $\mathbb R^d$ for $d > 2$. There is also no limit on the number of local minima on the surface of a slope region.
+
+\begin{thm}
+\label{thm:saddle_on_border}
+Let $d = 2$ and $A \subset \mathbb R^d$ be a slope region. Let $s \in A$ be a saddle point. Then, $s \in \partial A$.
+\end{thm}
+
+\emph{Proof:} Assume $s$ is an interior point of $A$, which means there is a open set $U$ with $s \in U \subset A$. $s$ being a saddle point means there is a neighborhood $V \subset U$ so that $V_- := V \cap [f < f(s)]$ as well as $V_+ := V \cap [f > f(s)]$ decompose in two or more connected components.
+
+Pick $a_1, a_2$ from different components of $V_-$ as well as $b_1, b_2$ from different components of $V_+$. $a_1$ and $a_2$ have to be connected by a monotonic path, but this path has to move outside of $V$ since the points are from different components of $V_-$ and by virtue of being monotonic, the path can not go through $V_+$. Analogue for $b_1$ and $b_2$.
+
+Again by the Jordan Curve Theorem, these to paths have to cross in some point $c$, which again yields a contradiction.
+
+\begin{equation*}
+f(c) \leq max(f(a_1), f(a_2)) < f(s) < min(f(b_1), f(b_2)) \leq f(c)
+\end{equation*}
+
+Thus the assumption that $s$ is a interior point has to be false.
+
+\hfill $\Box$
+
+\begin{exmp}
+Let $\Omega = A = \mathbb R^3$. Let f be the distance from the unit circle laying in the $x$-$y$-plane. 
+
+\begin{equation*}
+f: \mathbb R^3 \to \mathbb R: (x,y,z) \mapsto 
+\begin{cases}
+\sqrt{\left(x - \frac{x}{||\left(x,y\right)||_2}\right)^2 + \left(y - \frac{y}{||\left(x,y\right)||_2}\right)^2 + z^2} & ||(x,y)||_2 \neq 0 \\
+\sqrt{1+z^2} & ||(x,y)||_2 = 0
+\end{cases}
+\end{equation*}
+
+Again, let us look at the levelsets to show $A$ is a slope region. The levelset of $f \equiv 0$ is the unit circle. For $0 < f < 1$ the levelsets are tori. $f \equiv 1$ marks a transition and the levelset is a torus with its hole closed. Then, for $f > 1$ the levelsets look like the exterior surface of a self intersecting torus, topologically equivalent to a sphere. All these levelsets are connected. Thus, $A$ is indeed a slope region.
+
+Now consider the point $(0,0,0)$. Along the $x$ and $y$-direction it is a local maximum, however along the $z$-direction it is a local minimum. Thus, it is a saddle point. Therefore, theorem \ref{thm:saddle_on_border} does not hold in higher dimensions.
+\end{exmp}
+
+
+
 
 \section{BP And Other Segmentation Methods}
 \begin{itemize}
