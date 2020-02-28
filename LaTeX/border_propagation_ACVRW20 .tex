@@ -34,6 +34,16 @@
 \newcommand*{\toccontents}{\@starttoc{toc}}
 \makeatother
 
+%https://tex.stackexchange.com/questions/296207/reducing-space-between-items-of-reference
+\usepackage{etoolbox}
+\patchcmd{\thebibliography}
+  {\settowidth}
+  {\setlength{\parsep}{1pt}\setlength{\itemsep}{0pt plus 0.1pt}\settowidth}
+  {}{}
+\apptocmd{\thebibliography}
+  {\footnotesize}
+  {}{}
+
 \setlength{\droptitle}{-60pt}
 
 \begin{document}
@@ -237,7 +247,7 @@ Then the closure $\bar A$ is also a slope region.
 The following theorem is only formulated for closed slope regions, but because of the above theorem this is not a big restriction.
 
 \begin{thm}
-Let $d = 2$ and $A \subset \mathbb R^d$ be a closed slope region.
+Let $d = 2$ and $A \subset \mathbb R^d$ be a closed and bounded slope region.
 Let $(\partial A_i)_{i\in I}$ be an enumeration of the connected components of the boundary $\partial A$.
 Then $\forall i \in I : f|_{\partial A_i}$ has at most one local minimum and one local maximum.
 \end{thm}
@@ -250,8 +260,8 @@ Then $\forall i \in I : f|_{\partial A_i}$ has at most one local minimum and one
 \end{wrapfigure}
 
 \emph{Proof:} Assume there are two local minima $a_1, a_2 \in \partial A_i$ with $f(a_1) \leq f(a_2)$.
-Since $\partial A_i$ is connected, there has to be a point $b_1 \in \partial A_i$ between them with $f(a_2) > f(b_1)$.
-On the 'other side' of $a_2$ there has to be a point $b_2 \in \partial A_i$, also with $f(a_2) > f(b_2)$.
+Since $\partial A_i$ is connected, there has to be a point $b_1 \in \partial A_i$ between them with $f(a_2) < f(b_1)$.
+On the 'other side' of $a_2$ there has to be a point $b_2 \in \partial A_i$, also with $f(a_2) < f(b_2)$.
 Note that the 'other side' exists only because $\Omega = \mathbb R^2$ and thus $\partial A_i$ is a line.
 
 Since $A$ is a slope region, $a_1$ and $a_2$, as well as $b_1$ and $b_2$ have to be connected by a monotonic path.
