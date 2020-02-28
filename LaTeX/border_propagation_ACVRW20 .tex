@@ -19,6 +19,7 @@
 \usepackage{cite}
 \usepackage{wrapfig}
 \usepackage{hyperref}
+\usepackage{titling}
 
 \theoremstyle{plain}
 \newtheorem{thm}{Theorem}[section] % reset theorem numbering for each chapter
@@ -33,9 +34,11 @@
 \newcommand*{\toccontents}{\@starttoc{toc}}
 \makeatother
 
+\setlength{\droptitle}{-60pt}
+
 \begin{document}
-\author{\textsc{Florian Bogner} \& \textsc{Alexander Palmrich}}
-\title{Border Propagation: A Novel Approach To Determine Slope Region Decompositions}
+\author{\textsc{Florian Bogner} \& \textsc{Alexander Palmrich}}%\vspace{-5ex}}
+\title{Border Propagation: A Novel Approach To Determine Slope Region Decompositions}%\vspace{-5ex}}
 \maketitle
 
 %\toccontents
@@ -450,10 +453,10 @@ The pseudo-code for the algorithm is printed below, the executable python code c
 %
 %Much like connected components need to be assigned to colliding regions in the continuous case, the same has to be done in the discrete world.
 %BP achieves this by distributing halo components among the involved regions.
-The heuristic chosen by the authors to decide which region gets which component during a halo swap is as follows:
-The component which allows for expansion towards the biggest chunk of unassigned points gets assigned to the involved region with the lowest minimum.
-The component allowing for second largest expansion gets assigned to the involved region with the second lowest minimum, etc.
-The intent is to prefer the construction of large regions which reflect the topology well, and to freeze tiny regions, since they have a good chance of resulting from noise.
+%The heuristic chosen by the authors to decide which region gets which component during a halo swap is as follows:
+%The component which allows for expansion towards the biggest chunk of unassigned points gets assigned to the involved region with the lowest minimum.
+%The component allowing for second largest expansion gets assigned to the involved region with the second lowest minimum, etc.
+%The intent is to prefer the construction of large regions which reflect the topology well, and to freeze tiny regions, since they have a good chance of resulting from noise.
 
 
 %By iterating over the levelsets and swapping entire halo components, BP effectively ensures that the borders between regions are on the discretized equivalent of a continuous levelset.
@@ -522,21 +525,21 @@ The intent is to prefer the construction of large regions which reflect the topo
 The result of BP is satisfactory, but we assume that improvements can be made in running time.
 The code was profiled multiple times and has been adapted to run faster with significant gains in many instances.
 
-Most of the CPU cycles are spent searching for connected components (as of writing this document).
-We have already put efficient preliminary tests into place in order to minimize the calls to these expensive searches.
-Yet two runtime improvements come to mind:
-\begin{itemize}
-\item Growing regions not by a random choice from their halo, but from a priority queue, with new halo points being added to the end of the queue.
-This will reduce cases where self-collisions of regions are triggered, which require a call to the expensive search in order to be handled correctly.
-\item Making the expensive search itself more efficient:
-Searching for components with the A* algortihm, and encouraging the search to move along iso-surfaces.
-This will terminate the search far earlier in cases where there is only one component to be found, potentially reducing the complexity by one order for such calls.
-This optimization is being implemented as of writing.
-\end{itemize}
+%Most of the CPU cycles are spent searching for connected components (as of writing this document).
+%We have already put efficient preliminary tests into place in order to minimize the calls to these expensive searches.
+%Yet two runtime improvements come to mind:
+%\begin{itemize}
+%\item Growing regions not by a random choice from their halo, but from a priority queue, with new halo points being added to the end of the queue.
+%This will reduce cases where self-collisions of regions are triggered, which require a call to the expensive search in order to be handled correctly.
+%\item Making the expensive search itself more efficient:
+%Searching for components with the A* algortihm, and encouraging the search to move along iso-surfaces.
+%This will terminate the search far earlier in cases where there is only one component to be found, potentially reducing the complexity by one order for such calls.
+%This optimization is being implemented as of writing.
+%\end{itemize}
 
-Other additional features we consider:
+Additional features we consider:
 \begin{itemize}
-\item Generating the Reeb graph from the slope region decomposition.
+%\item Generating the Reeb graph from the slope region decomposition.
 \item Providing a \emph{tolerance} parameter, which governs how steep a continuous function might get, before an iso-surface is deemed disconnected in the discrete data.
 This would allow for a trade-off between continuous connectedness and discrete connectedness.
 Modeling continuous connectedness creates fewer slope regions and yields pleasing results on smooth data, but the resulting regions are not monotonically connected (in the discrete sense of \emph{connected}) in general.
