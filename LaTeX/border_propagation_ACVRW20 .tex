@@ -64,7 +64,7 @@ Slope regions are a useful tool in pattern recognition. We review theory about s
 
 %Please take a look at the commented code at \href{https://github.com/SirFloIII/MustererkennungLVA}{our git repository}.\footnote{\url{https://github.com/SirFloIII/MustererkennungLVA}}
 
-\section{Motivating Slope Regions}
+\section{Introduction}
 \label{sec:motivating_slope_regions}
 
 In this section we develop an intuitive understanding of the term \emph{slope region} \cite{kropatsch2019computing} and its generalization to  higher dimensions.
@@ -101,7 +101,7 @@ By abstracting from image and tomography to a real function $f: \Omega \rightarr
 %In this and the following chapters we will consider a set $\Omega \subset \mathbb{R}^n$ with $n > 1$ and a continuous function $f: \Omega \to \mathbb{R}$.
 
 In this and the following chapters we will consider a topological space $(\Omega, \mathcal T)$ with a continuous function $f: \Omega \to \mathbb{R}$.
-In practice or for ease of imagination, $(\Omega, \mathcal T)$ will typically be a rectangle or cuboid subset of $\mathbb R^2$ or $\mathbb R^3$ equipped with the euclidean topology and $f$ will describe a continuous image or 3D-Scan.
+In practice or for ease of imagination, $(\Omega, \mathcal T)$ will typically be a rectangle or cuboid subset of $\mathbb R^2$ or $\mathbb R^3$ equipped with the euclidean topology and $f$ will describe a continuous image or 3D-scan.
 
 \begin{defn}
 A \emph{path} is a continuous function from the real interval $[a,b]$ (with $a<b$) into a topological space $\Omega$.
@@ -164,7 +164,7 @@ $\succeq$ is a partial order, i.e. fulfills reflexivity, antisymmetry and transi
 A slope region decomposition $\mathcal{A}$ is called \emph{maximally coarse} or simply \emph{coarse} if and only if there is no other coarser slope region decomposition.
 \end{defn}
 
-We can apply Zorn's lemma to the partial order $\succeq$, which yields the existence of maximal elements.
+We can apply Zorn's lemma \cite{zorn1935remark} to the partial order $\succeq$, which yields the existence of maximal elements.
 Hence every set $\Omega$ has a coarse decomposition.
 
 \begin{thm}
@@ -253,7 +253,7 @@ On the 'other side' of $a_2$ there has to be a point $b_2 \in \partial A_i$, als
 Note that the 'other side' exists only because $\Omega = \mathbb R^2$ and thus $\partial A_i$ is a line.
 
 Since $A$ is a slope region, $a_1$ and $a_2$, as well as $b_1$ and $b_2$ have to be connected by a monotonic path.
-Because of the Jordan Curve Theorem, these paths have to cross in a point $c \in A$.
+Because of the Jordan Curve Theorem \cite{jordan1887cours}, these paths have to cross in a point $c \in A$.
 But this yields a contradiction: $f(c) \leq f(a_2) < min(f(b_1), f(b_2)) \leq f(c)$.
 Thus the assumption of the existence of two local minima has to be false.
 
@@ -558,10 +558,10 @@ On smooth data the latter tends to produce too fine of a decomposition.
 %Most of the theory behind BP as well as the actual code was conceived in direct interaction between both authors. Only some tidbits might be attributed to a single one of them, such as \textsc{Bogner}'s idea to swap halo components between regions, his proof of theorem \ref{slope_iff_conn_lvlsets}, or his code to generate an interactive display of the algorithm at work using pygame as well as chapters \ref{sec:definitions} and \ref{sec:reeb}. \textsc{Palmrich} can be credited with the use of the halo data structure, the idea of moving along iso-surfaces for a speedup during the search of connected components, and chapters \ref{sec:motivating_slope_regions}, \ref{sec:motivating_BP} and \ref{sec:details} in this paper.
 
 \section{Conclusion}
-In this paper we have shown that slope regions in high dimensions ($n\geq 3$) do not have the same critical point properties well-established in 2D.
+In this paper we have shown that slope regions of continuous functions in high dimensions ($n\geq 3$) do not have the same critical point properties well-established in 2D.
 Hence previous graph-based methods of building slope region decompositions by merging regions according to their border extrema will fail in high dimensions.
 Instead we developed a new, levelset-based method of growing regions, which yields slope region decompositions on discrete data of arbitrary dimension.
-We assume the data to be discretized from a continuous function.
+%We assume the data to be discretized from a continuous function.
 
 \bibliography{lit}
 \bibliographystyle{plain}
