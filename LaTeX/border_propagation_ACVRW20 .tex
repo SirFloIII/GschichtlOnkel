@@ -394,9 +394,16 @@ We deal with iso-hyper-surfaces as level sets, but the topological consideration
 The somewhat vague description of BP in the previous section assumed a continuous surface.
 In most applications, however, the data will be provided in a discrete raster format.
 Some intricacies arise from this discretization, most notably iso-surfaces of a smooth function $f$ will not have a straight-forward representation in the discrete grid obtained from rasterizing $f$.
+The data structure we use is a set of indices, representing the positions in the discrete array already assigned to a region.
+Each region also has a set of (yet) unassigned points, which determine where the region might grow in the next iteration.
+This effectively models the smooth levelsets in the discrete representation.
 
+The pseudo-code for the algorithm is printed below, the executable python code can be accessed in our github repository:
+\url{https://github.com/SirFloIII/MustererkennungLVA}
 
-TODO: pseudo-code
+\begin{verbatim}
+code here
+\end{verbatim}
 
 %As a result, there are multiple ways to define what a \emph{discrete slope region} is supposed to be.
 %Let us first explore, why the most obvious choice for a definition does not characterize the property we are interested in.
@@ -423,63 +430,63 @@ TODO: pseudo-code
 %
 %Much like connected components need to be assigned to colliding regions in the continuous case, the same has to be done in the discrete world.
 %BP achieves this by distributing halo components among the involved regions.
-The heuristic chosen by the authors to decide which region gets which component is as follows:
+The heuristic chosen by the authors to decide which region gets which component during a halo swap is as follows:
 The component which allows for expansion towards the biggest chunk of unassigned points gets assigned to the involved region with the lowest minimum.
 The component allowing for second largest expansion gets assigned to the involved region with the second lowest minimum, etc.
 The intent is to prefer the construction of large regions which reflect the topology well, and to freeze tiny regions, since they have a good chance of resulting from noise.
 
 
-By iterating over the levelsets and swapping entire halo components, BP effectively ensures that the borders between regions are on the discretized equivalent of a continuous levelset.
-This property allows for an interesting characterization related to Reeb Graphs, as shown in the next section.
+%By iterating over the levelsets and swapping entire halo components, BP effectively ensures that the borders between regions are on the discretized equivalent of a continuous levelset.
+%This property allows for an interesting characterization related to Reeb Graphs, as shown in the next section.
 
-\section{Slope Decompositions From Reeb Graph}
-\label{sec:reeb}
-
-\begin{wrapfigure}{R}{0.25\textwidth}
-\centering
-\includegraphics[width=0.25\textwidth]{img/Reebgraph.png}
-\caption{Reeb graph of the torus}
-\label{fig:reeb_torus}
-\end{wrapfigure}
-
-
-There is a significant connection between Reeb graphs and slope region decompositions.
-
-
-\begin{defn}
-Let $(\Omega, \mathcal T)$ be a topological space, and $f: \Omega \to \mathbb R$ continuous. We define an equivalence relation for $x,y \in \Omega$: 
-\begin{equation*}
-x \sim y :\Leftrightarrow f(x) = f(y) = c ~\land ~ x ~\text{and}~ y ~\text{are path-connected in}~ f^{-1}(c)
-\end{equation*}
-The \emph{Reeb graph} of $\Omega$ is $G := \Omega/_\sim$
-\end{defn}
-
-\begin{exmp}
-Let $\Omega$ be a torus on its side and $f$ be the distance from the ground.
-Its Reeb graph is depicted in Figure \ref{fig:reeb_torus}.
-\end{exmp}
-
-In general, a Reeb graph consists of vertices and lines between them.
-Vertices correspond to critical points of $f$.
-They are local extrema iff their rank is $1$ and saddle points iff their rank is bigger than $2$.
-
-\begin{thm}
-Let $S$ be a slope region.
-$S/_\sim$ may intersect no more than one point of $G$ at a given height.
-
-\emph{Proof:} Follows from Theorem \ref{slope_iff_conn_lvlsets}.\hfill $\Box$
-\end{thm}
-
-Conversely:
-
-\begin{thm}
-Let $L$ be a connected linear subset of $G$.
-$S := \bigcup_{l \in L} l$ is a slope region with the additional property that its borders are along levelsets.
-
-\emph{Proof:} Also follows from Theorem \ref{slope_iff_conn_lvlsets}.\hfill $\Box$
-\end{thm}
-
-Thus, decompositions of a Reeb graph $G$ into connected linear subsets of $G$ are isomorphic to slope region decompositions with borders along levelsets, which are exactly the kind of slope region decompositions which BP produces.
+%\section{Slope Decompositions From Reeb Graph}
+%\label{sec:reeb}
+%
+%\begin{wrapfigure}{R}{0.25\textwidth}
+%\centering
+%\includegraphics[width=0.25\textwidth]{img/Reebgraph.png}
+%\caption{Reeb graph of the torus}
+%\label{fig:reeb_torus}
+%\end{wrapfigure}
+%
+%
+%There is a significant connection between Reeb graphs and slope region decompositions.
+%
+%
+%\begin{defn}
+%Let $(\Omega, \mathcal T)$ be a topological space, and $f: \Omega \to \mathbb R$ continuous. We define an equivalence relation for $x,y \in \Omega$: 
+%\begin{equation*}
+%x \sim y :\Leftrightarrow f(x) = f(y) = c ~\land ~ x ~\text{and}~ y ~\text{are path-connected in}~ f^{-1}(c)
+%\end{equation*}
+%The \emph{Reeb graph} of $\Omega$ is $G := \Omega/_\sim$
+%\end{defn}
+%
+%\begin{exmp}
+%Let $\Omega$ be a torus on its side and $f$ be the distance from the ground.
+%Its Reeb graph is depicted in Figure \ref{fig:reeb_torus}.
+%\end{exmp}
+%
+%In general, a Reeb graph consists of vertices and lines between them.
+%Vertices correspond to critical points of $f$.
+%They are local extrema iff their rank is $1$ and saddle points iff their rank is bigger than $2$.
+%
+%\begin{thm}
+%Let $S$ be a slope region.
+%$S/_\sim$ may intersect no more than one point of $G$ at a given height.
+%
+%\emph{Proof:} Follows from Theorem \ref{slope_iff_conn_lvlsets}.\hfill $\Box$
+%\end{thm}
+%
+%Conversely:
+%
+%\begin{thm}
+%Let $L$ be a connected linear subset of $G$.
+%$S := \bigcup_{l \in L} l$ is a slope region with the additional property that its borders are along levelsets.
+%
+%\emph{Proof:} Also follows from Theorem \ref{slope_iff_conn_lvlsets}.\hfill $\Box$
+%\end{thm}
+%
+%Thus, decompositions of a Reeb graph $G$ into connected linear subsets of $G$ are isomorphic to slope region decompositions with borders along levelsets, which are exactly the kind of slope region decompositions which BP produces.
 
 
 
