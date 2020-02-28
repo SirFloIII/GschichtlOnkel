@@ -198,7 +198,7 @@ $~$
 Given $x, y \in A$ we have to find a monotonic path $\gamma$.
 Without loss of generality suppose $f(x) \geq f(y)$.
 Since $A$ is path-connected, there exists an (not necessarily monotonic) path $\gamma_0: [a,b] \to A$ from $x$ to $y$.
-Using the Rising Sun lemma \cite{grill} on the continuous function $f \circ \gamma_0$ we get the \emph{shadow} $S = \bigcup_{i \in I} (a_n, b_n)$ consisting of at most countably many intervals.
+Using the Rising Sun lemma \cite{riesz1932theoreme} on the continuous function $f \circ \gamma_0$ we get the \emph{shadow} $S = \bigcup_{i \in I} (a_n, b_n)$ consisting of at most countably many intervals.
 
 $S$ consists of the points which contradict the monotony of $f \circ \gamma_0$, thus we want to \emph{iron out} these points.
 
@@ -221,7 +221,7 @@ $\gamma$ is a monotonic path from $x$ to $y$, thus $A$ is a slope region.
 
 \section{Results In The Plane And Counterexamples In Higher Dimensions}
 
-There are two theorems that are useful, but only hold if $\Omega \subset \mathbb R^2$, not if $\Omega \subset \mathbb R^d$ for $d > 2$.
+There are two theorems (\!\!\cite{kropatsch2019computing} Lemma 1 and \cite{kropatsch2019computing} Lemma 2) that are useful, but only hold if $\Omega \subset \mathbb R^2$, not in general if $\Omega \subset \mathbb R^d$ for $d > 2$.
 But first, a lemma.
 
 \begin{thm}
@@ -537,6 +537,11 @@ On smooth data the latter tends to produce too fine of a decomposition.
 %
 %Most of the theory behind BP as well as the actual code was conceived in direct interaction between both authors. Only some tidbits might be attributed to a single one of them, such as \textsc{Bogner}'s idea to swap halo components between regions, his proof of theorem \ref{slope_iff_conn_lvlsets}, or his code to generate an interactive display of the algorithm at work using pygame as well as chapters \ref{sec:definitions} and \ref{sec:reeb}. \textsc{Palmrich} can be credited with the use of the halo data structure, the idea of moving along iso-surfaces for a speedup during the search of connected components, and chapters \ref{sec:motivating_slope_regions}, \ref{sec:motivating_BP} and \ref{sec:details} in this paper.
 
+\section{Conclusion}
+In this paper we have shown that slope regions in high dimensions ($n\geq 3$) do not have the same critical point properties well-established in 2D.
+Hence previous graph-based methods of building slope region decompositions by merging regions according to their border extrema will fail in high dimensions.
+Instead we developed a new, levelset-based method of growing regions, which yields slope region decompositions on discrete data of arbitrary dimension.
+We assume the data to be discretized from a continuous function.
 
 \bibliography{lit}
 \bibliographystyle{plain}
