@@ -10,8 +10,8 @@
 \usepackage{latexsym}
 \usepackage{mathtools}
 \usepackage{listings}
-%\usepackage{algorithm}
-%\usepackage{algpseudocode}
+\usepackage{algorithm}
+\usepackage{algpseudocode}
 \usepackage{graphicx}
 \usepackage{booktabs}
 \usepackage{hhline}
@@ -401,22 +401,29 @@ This effectively models the smooth levelsets in the discrete representation.
 The pseudo-code for the algorithm is printed below, the executable python code can be accessed in our github repository:
 \url{https://github.com/SirFloIII/MustererkennungLVA}
 
-\begin{verbatim}
-
-- Enumerate all values of f and collect points into levelsets.
-- For each levelset in bottom to top order:
-    - add points to regions if they are in the halo of a region.
-    - if an added point is in the halo of different region:
-        - find the union of the halos of the involved regions
-        - find the connected components thereof
-        - assign these to the regions in an arbitrary way
-    - if an added point splits the halo of the region in two:
-        - reduce the halo the region to one component
-        - for each other component:
-            - create a new region containing the component as halo
-    - for leftover points that cannot be added to any regions:
-        - create a new region containing only that point
-\end{verbatim}
+\begin{algorithm}
+\caption{Border Propagation}
+\begin{algorithmic}
+\State Enumerate all values of $f$ and collect points into levelsets.
+\For{each levelset in bottom to top order}
+    \State Add points to regions if they are in the halo of a region
+    \If{an added point is in the halo of different region}
+        \State Find the union of the halos of the involved regions
+        \State Find the connected components thereof
+        \State Assign these to the regions in an arbitrary way
+	\EndIf
+    \If{an added point splits the halo of the region in two}
+        \State Reduce the halo the region to one component
+        \For{each other component}
+            \State Create a new region containing the component as halo
+		\EndFor
+    \EndIf
+    \For{leftover points that cannot be added to any regions}
+        \State Create a new region containing only that point
+	\EndFor
+\EndFor
+\end{algorithmic}
+\end{algorithm}
 
 %As a result, there are multiple ways to define what a \emph{discrete slope region} is supposed to be.
 %Let us first explore, why the most obvious choice for a definition does not characterize the property we are interested in.
