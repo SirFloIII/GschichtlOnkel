@@ -87,7 +87,7 @@ Consider an image, either gray-scale or in color.
 If it is a color image, it can be decomposed into its color channels (red-green-blue), which can individually be read as gray-scale images.
 We consider pixel intensity of one such gray-scale image as the height of a landscape, yielding a surface in 2.5D space.
 The surface will have peaks in areas where the image is bright, and will have dales in dark areas.
-Please refer to Figure \ref{fig:conversion} for a visualization!
+%Please refer to Figure \ref{fig:conversion} for a visualization!
 
 \begin{wrapfigure}{R}{0.5\textwidth}
 \centering
@@ -106,7 +106,7 @@ Think of a computer tomography scan, which will yield gray-scale data, but not j
 We want to partition the 3D volume, such that any two points in a region can be connected via an either ascending or descending path within the region.
 Recall that \emph{ascending} and \emph{descending} refers to the brightness value of the tomography scan as we move in the volume. For piecewise linear functions on a volume, decompositions were introduced in \cite{edelsbrunner2003morse}. 
 
-By abstracting from image and tomography to a real function $f: \Omega \rightarrow \mathbb{R}$ defined on some subset of $\mathbb{R}^n$ (think of it as the pixel intensity function!), and by rigorously defining a coarsest slope decomposition, we can lift the concept to arbitrary dimensions in a mathematically concise fashion.
+By abstracting from image and tomography to a real function $f: \Omega \rightarrow \mathbb{R}$ defined on some subset of $\mathbb{R}^n$ (think of it as the pixel intensity function), and by rigorously defining a coarsest slope decomposition, we can lift the concept to arbitrary dimensions in a mathematically concise fashion.
 
 \section{Defining Slope Regions}
 \label{sec:definitions}
