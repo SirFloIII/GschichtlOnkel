@@ -67,13 +67,19 @@ TU Wien\\
 \begin{abstract}
 Slope regions are a useful tool in pattern recognition. We review theory about slope regions and prove a theorem linking monotonic paths and the connectedness of levelsets. Unexpected behavior of slope regions in higher dimensions is illustrated by two examples. We introduce the \emph{border propagation} (BP) algorithm, which decomposes a $d$-dimensional array ($d \in \mathbb N$) of scalar values into slope regions. It is novel as it allows more than 2-dimensional data.
 \end{abstract}
-
-
 %%%%%%%%%%%%%
 % BODY TEXT %
 %%%%%%%%%%%%%
 
 %-------------------------------------------------------------------------
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=\columnwidth]{img/visu1.png}
+\caption{gray-scale to height-map conversion}
+\label{fig:conversion}
+\end{figure}
+
 \section{Introduction}
 \label{sec:motivating_slope_regions}
 
@@ -85,13 +91,6 @@ If it is a color image, it can be decomposed into its color channels (red-green-
 We consider pixel intensity of one such gray-scale image as the height of a landscape, yielding a 2D surface in 3D space.
 The surface will have peaks in areas where the image is bright, and will have dales in dark areas.
 %Please refer to Figure \ref{fig:conversion} for a visualization!
-
-\begin{figure}
-\centering
-\includegraphics[width=\columnwidth]{img/visu1.png}
-\caption{gray-scale to height-map conversion}
-\label{fig:conversion}
-\end{figure}
 
 Now our aim is to partition the surface into \emph{regions} (i.e. subsets) in a particular way:
 We require each region to consist only of a single slope, by which we mean that we can ascend (or descend) from any given point of the region, to any other given point of the region, along a path that runs entirely within the region.
