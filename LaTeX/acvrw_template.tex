@@ -26,7 +26,7 @@
 %%%%%%%%%%%%%%%
 
 % !!! UNCOMMENT THIS LINE FOR THE FINAL SUBMISSION !!!
-%\acvrwfinalcopy 
+\acvrwfinalcopy 
 
 \def\acvrwPaperID{34} % *** Enter the ACVRW Paper ID here
 \def\httilde{\mbox{\tt\raisebox{-.5ex}{\symbol{126}}}}
@@ -374,7 +374,7 @@ Imagine a water level rising from below the surface, up to the point of first co
 Starting at this global minimum, we add a new region, containing only the argmin (i.e. a single point on the 2D image where the minimal value is taken).
 
 Now, there might be many points where the global minimum is taken.
-This will either be due to a flat region (\emph{plateau}) on the surface, which we want to include into the single existing region, or it will be due to individual dales, which all have their lowest point at the same height.
+This will either be due to a connected region (\emph{plateau}) on the surface, which we want to include into the single existing region, or it will be due to individual dales, which all have their lowest point at the same height.
 In this case, we can't put the points into the existing region, because we would not be able to get from one argmin to another via a monotonic path.
 Instead, we need to add a new region for each individual dale.
 
@@ -391,7 +391,7 @@ Any such point is a saddle point, and we have to account for it the next time we
 The saddle point connects the edges of the regions which meet in it, at the current height of the water level.
 It might be the case that the not-yet-assigned points (the ones above the water) get separated into multiple connected components, or they might remain connected.
 
-If the points remain connected, then we have to decide for a single one of the involved regions to be allowed to grow upwards from the component.
+If the points remain connected, then we decide for a single one of the involved regions to be allowed to grow upwards from the component.
 This means that one region effectively inherits the growth directions from the other region(s).
 The other region(s) lose their potential for expansion and remain frozen in their current state.
 
