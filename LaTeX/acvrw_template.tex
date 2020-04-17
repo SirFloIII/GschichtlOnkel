@@ -26,7 +26,7 @@
 %%%%%%%%%%%%%%%
 
 % !!! UNCOMMENT THIS LINE FOR THE FINAL SUBMISSION !!!
-% \acvrwfinalcopy 
+%\acvrwfinalcopy 
 
 \def\acvrwPaperID{34} % *** Enter the ACVRW Paper ID here
 \def\httilde{\mbox{\tt\raisebox{-.5ex}{\symbol{126}}}}
@@ -82,7 +82,7 @@ The concise definition of the terms already employed here is reserved for the ne
 
 Consider an image, either gray-scale or in color.
 If it is a color image, it can be decomposed into its color channels (red-green-blue), which can individually be read as gray-scale images.
-We consider pixel intensity of one such gray-scale image as the height of a landscape, yielding a surface in 2.5D space.
+We consider pixel intensity of one such gray-scale image as the height of a landscape, yielding a 2D surface in 3D space.
 The surface will have peaks in areas where the image is bright, and will have dales in dark areas.
 %Please refer to Figure \ref{fig:conversion} for a visualization!
 
@@ -99,7 +99,7 @@ Such a decomposition is not unique, but we can at least try to get a partition \
 There might be many different coarsest slope decompositions.
 
 The criterion we used to describe slopes, any two points being connected by either an ascending or a descending path, can easily be used in higher dimensions.
-Think of a computer tomography scan, which will yield gray-scale data, but not just on a 2D image, but rather on a 3D volume.
+Think of a computed tomography scan, which will yield gray-scale data, but not just on a 2D image, but rather on a 3D volume.
 We want to partition the 3D volume, such that any two points in a region can be connected via an either ascending or descending path within the region.
 Recall that \emph{ascending} and \emph{descending} refers to the brightness value of the tomography scan as we move in the volume. For piecewise linear functions on a volume, decompositions were introduced in \cite{edelsbrunner2003morse}. 
 
@@ -159,7 +159,7 @@ A family of sets $\left\{ A_i \subset \Omega \mid i \in I \right\}$ is called a 
 
 \begin{defn}
 Consider two slope region decompositions $\mathcal{A} = \left\{ A_i \subset \Omega \mid i \in I \right\}$ and $\mathcal{B} = \left\{ B_j \subset \Omega \mid j \in J \right\}$.
-We call $\mathcal{A}$ \emph{coarser than} $\mathcal{B}$, alternativly $\mathcal{B}$ \emph{finer than} $\mathcal{A}$, in Symbols $\mathcal{A} \succeq \mathcal{B}$ if and only if
+We call $\mathcal{A}$ \emph{coarser than} $\mathcal{B}$, alternatively $\mathcal{B}$ \emph{finer than} $\mathcal{A}$, in Symbols $\mathcal{A} \succeq \mathcal{B}$ if and only if
 \begin{equation*}
 \forall j \in J ~ \exists \, i \in I: B_j \subset A_i.
 \end{equation*}
@@ -182,7 +182,7 @@ Hence every set $\Omega$ has a coarse decomposition.
 Let $A \subset \Omega$ be a path-connected set.
 $A$ is a slope region if and only if all levelsets of $f$ in $A$ are path-connected, i.e.
 \begin{equation*}
-\forall c \in \mathbb{R}: f^{-1}(c) \cap A ~ \text{is path-connected}.
+\forall c \in \mathbb{R}: f^{-1}(\{c\}) \cap A ~ \text{is path-connected}.
 \end{equation*}
 \end{thm}
 
@@ -199,7 +199,7 @@ $~$
 \begin{figure}
 \centering
 \includegraphics[width=\columnwidth]{img/Rising_sun_lemma.png}
-\caption{Rising Sun lemma}
+\caption{applying the Rising Sun lemma}
 \label{fig:lemma_1}
 \end{figure}
 
@@ -230,8 +230,8 @@ $\gamma$ is a monotonic path from $x$ to $y$, thus $A$ is a slope region.
 
 \section{Results In The Plane And Counterexamples In Higher Dimensions}
 
-There are two theorems (\!\!\cite{kropatsch2019computing} Lemma 1 and \cite{kropatsch2019computing} Lemma 2) that are useful, but only hold if $\Omega \subset \mathbb R^2$, not in general if $\Omega \subset \mathbb R^d$ for $d > 2$.
-But first, a lemma.
+There are two theorems (\;\!\!\cite{kropatsch2019computing} Lemma 1 and \cite{kropatsch2019computing} Lemma 2) that are useful, but only hold if $\Omega \subset \mathbb R^2$, not in general if $\Omega \subset \mathbb R^d$ for $d > 2$.
+But first, we prove a lemma.
 
 \begin{thm}
 Let $A$ be a slope region.
@@ -244,15 +244,16 @@ Then the closure $\bar A$ is also a slope region.
 The following theorem is only formulated for closed slope regions, but because of the above theorem this is not a big restriction.
 
 \begin{thm}
+\label{uniqueminmax}
 Let $d = 2$ and $A \subset \mathbb R^d$ be a closed and bounded slope region.
 Let $(\partial A_i)_{i\in I}$ be an enumeration of the connected components of the boundary $\partial A$.
-Then $\forall i \in I : f|_{\partial A_i}$ has at most one local minimum and one local maximum.
+Then $\forall i \in I : f|_{\partial A_i}$ has at most one local minimum and one local maximum (but the extrema might be spread out in a connected plateau).
 \end{thm}
 
 \begin{figure}
 \centering
 \includegraphics[width=0.5\columnwidth]{img/sketch_border_thm.pdf}
-%\caption{Sketch of Proof.}
+\caption{a sketch of the situation in Theorem \ref{uniqueminmax}}
 \label{fig:sketch_1}
 \end{figure}
 
@@ -301,7 +302,7 @@ Pick $a_1, a_2$ from different components of $V_-$ as well as $b_1, b_2$ from di
 $a_1$ and $a_2$ have to be connected by a monotonic path, but this path has to move outside of $V$ since the points are from different components of $V_-$ and by virtue of being monotonic, the path can not go through $V_+$.
 Analogue for $b_1$ and $b_2$.
 
-Again by the Jordan Curve Theorem, these to paths have to cross in some point $c$, which again yields a contradiction.
+Again by the Jordan Curve Theorem, these two paths have to cross in some point $c$, which again yields a contradiction.
 
 \begin{multline*}
 f(c) \leq max(f(a_1), f(a_2)) < \\
