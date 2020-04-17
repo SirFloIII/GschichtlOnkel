@@ -332,7 +332,7 @@ Let f be the distance from the unit circle laying in the $x$-$y$-plane.
 f: \mathbb R^3 \to \mathbb R: (x,y,z) \mapsto \\
 \begin{cases}
 %\sqrt{\left(x - \frac{x}{||\left(x,y\right)||_2}\right)^2 + \left(y - \frac{y}{||\left(x,y\right)||_2}\right)^2 %+ z^2} & ||(x,y)||_2 \neq 0 \\
-\left\Vert\left(x - \frac{x}{||\left(x,y\right)||_2}, y - \frac{y}{||\left(x,y\right)||_2}, z\right)\right\Vert_2 & \left\Vert(x,y)\right\Vert_2 \neq 0 \\
+\left\Vert\left(x - \frac{x}{||x,y||_2}, y - \frac{y}{||x,y||_2}, z\right)\right\Vert_2 & \left\Vert(x,y)\right\Vert_2 \neq 0 \\
 \left\Vert(1, 0, z)\right\Vert_2 & \left\Vert(x,y)\right\Vert_2 = 0
 \end{cases}
 \end{multline*}
