@@ -174,7 +174,20 @@ $\succeq$ is a partial order, i.e. fulfills reflexivity, antisymmetry and transi
 A slope region decomposition $\mathcal{A}$ is called \emph{maximally coarse} or simply \emph{coarse} if and only if there is no other coarser slope region decomposition.
 \end{defn}
 
-We can apply Zorn's lemma \cite{zorn1935remark} to the partial order $\succeq$, which yields the existence of maximal elements.
+We can apply Zorn's lemma \cite{zorn1935remark} to the partial order $\succeq$, which yields the existence of maximal elements. For this we need to show that chains have upper bounds.
+\begin{thm}
+For any ascending chain of slope region decompositions $\left(\mathcal{A}_i\right)_{i\in I}$, that is $t\geq s \Rightarrow \mathcal{A}_t \succeq \mathcal{A}_s$, there is a slope region decomposition $\mathcal{A}_\infty$ satisfying $\forall i\in I:\mathcal{A}_\infty \succeq \mathcal{A}_i$.
+\end{thm}
+\emph{Proof:}
+We consider the equivalence relation "\emph{connected in $\mathcal{A}_i$}" for two points $x,y\in \Omega$:
+$$x\sim_i y :\Leftrightarrow \exists A \in \mathcal{A}_i: x\in A \land y\in A$$
+The equivalence relation is a subset of $\Omega^2$, and $\mathcal{A}_t \succeq \mathcal{A}_s$ implies $\sim_t \supset \sim_s$.
+This suggests the use of $\sim_\infty := \bigcup_{i\in I} \sim_i$ to get an upper bound.
+Indeed the equivalence classes of $\sim_\infty$ yield a partition $\mathcal{A}_\infty$ of $\Omega$, which is coarser than any $\mathcal{A}_i$.
+But do they form a slope region decomposition?
+Yes: For any two fixed points $x,y$ to be $\sim_\infty$-connected, they need to be $\sim_i$-connected for some $i\in I$. So there is a monotonic path linking $x$ and $y$ in $A=[x]_{\sim_i}\subset[x]_{\sim_\infty}$, by which they are monotonically connected in $\mathcal{A}_\infty$. Therefor $\mathcal{A}_\infty$ is a slope region decomposition.
+
+
 Hence every set $\Omega$ has a coarse decomposition.
 
 \begin{thm}
@@ -578,7 +591,7 @@ Instead we developed a new, levelset-based method of growing regions, which yiel
 %We assume the data to be discretized from a continuous function.
 
 \section{Acknowledgements}
-The BP algorithm as well as this paper are the result of a pattern recognition course held at the \href{https://www.tuwien.at/en/}{Vienna University Of Technology} from Oct 2019 till Jan 2020. Professor \textsc{W. Kropatsch} introduced us to the concept of slope regions and posed the challenge to compute them in high dimensions ($>2$). We want to thank him as well as \textsc{Darshan Batavia} for their support.
+The BP algorithm as well as this paper are the result of a pattern recognition course held at the \href{https://www.tuwien.at/en/}{Vienna University Of Technology} from Oct 2019 till Jan 2020. Professor \textsc{W. Kropatsch} introduced us to the concept of slope regions and posed the challenge to compute them in high dimensions ($>2$). We wish to thank him as well as \textsc{Darshan Batavia} for their valuable input.
 
 {\small
 \bibliographystyle{ieee}
