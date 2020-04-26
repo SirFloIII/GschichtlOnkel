@@ -210,8 +210,6 @@ Since $f(x) = f(y) = c$ a monotonic path between $x$ and $y$ would have to lie c
 However, since $x$ and $y$ are from different components, they cannot be connected by a path in $L$ and therefore cannot be connected with a monotonic path.
 Therefore, A is not a slope region.
 
-$~$
-
 \begin{figure}
 \centering
 \def\svgwidth{0.4\textwidth}
@@ -249,12 +247,10 @@ $\gamma$ is a monotonic path from $x$ to $y$, thus $A$ is a slope region.
 
 There are two theorems (\;\!\!\cite{kropatsch2019computing} Lemma 1 and \cite{kropatsch2019computing} Lemma 2) that are useful, but only hold if $\Omega \subset \mathbb R^2$, not in general if $\Omega \subset \mathbb R^d$ for $d > 2$.
 But first, we prove a lemma.
-
 \begin{thm}
 Let $A$ be a slope region.
 Then the closure $\bar A$ is also a slope region.
 \end{thm}
-
 \emph{Proof:} Follows from continuity of $f$.
 \hfill $\Box$
 
@@ -290,11 +286,9 @@ Thus the assumption of the existence of two local minima has to be false.
 \begin{exmp}
 Let $\Omega = \mathbb R^3$ and $A = B_1(0,0,0)$ be the closed unit ball.
 Let $f$ be the distance to the $x$-Axis. 
-
 \begin{equation*}
 f: \mathbb R^3 \to \mathbb R: (x,y,z) \mapsto \sqrt{y^2 + z^2}
 \end{equation*}
-
 The levelsets of $f$ in $A$ are either the $x$-Axis for $f \equiv 0$ or the sides of cylinders for $f > 0$.
 In any case, they are connected.
 Thus, by theorem \ref{slope_iff_conn_lvlsets}, $A$ is a slope region.
@@ -560,6 +554,10 @@ The code was profiled multiple times and has been adapted to run faster with sig
 %This will terminate the search far earlier in cases where there is only one component to be found, potentially reducing the complexity by one order for such calls.
 %This optimization is being implemented as of writing.
 %\end{itemize}
+
+$~$
+
+$~$
 
 Additional features we consider:
 \begin{itemize}
