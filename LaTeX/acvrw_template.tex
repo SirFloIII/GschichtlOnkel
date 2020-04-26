@@ -54,6 +54,8 @@ TU Wien\\
 Alexander Palmrich\\
 TU Wien\\
 {\tt\small apalmrich@gmail.com}
+%\and
+%Walter Kropatsch
 }
 
 
@@ -262,7 +264,7 @@ The following theorem is only formulated for closed slope regions, but because o
 \label{uniqueminmax}
 Let $d = 2$ and $A \subset \mathbb R^d$ be a closed and bounded slope region.
 Let $(\partial A_i)_{i\in I}$ be an enumeration of the connected components of the boundary $\partial A$.
-Then $\forall i \in I : f|_{\partial A_i}$ has at most one local minimum and one local maximum (but the extrema might be spread out in a connected plateau).
+For $i \in I$, if $\partial A_i$ is homeomorphic to a circle, then $f|_{\partial A_i}$ has at most one local minimum and one local maximum (but the extrema might be spread out in a connected plateau).
 \end{thm}
 
 \begin{figure}
@@ -273,16 +275,17 @@ Then $\forall i \in I : f|_{\partial A_i}$ has at most one local minimum and one
 \end{figure}
 
 \emph{Proof:} Assume there are two local minima $a_1, a_2 \in \partial A_i$ with $f(a_1) \leq f(a_2)$.
-Since $\partial A_i$ is connected, there has to be a point $b_1 \in \partial A_i$ between them with $f(a_2) < f(b_1)$.
-On the 'other side' of $a_2$ there has to be a point $b_2 \in \partial A_i$, also with $f(a_2) < f(b_2)$.
-Note that the 'other side' exists only because $\Omega = \mathbb R^2$ and thus $\partial A_i$ is a line.
+Since $\partial A_i$ is homeomorphic to a circle, there have to be local maxima $b_1$ and $b_2 \in \partial A_i$ between them with $f(a_2) < f(b_1) \leq f(b_2)$, one on each arc.
+%On the 'other side' of $a_2$ there has to be a point $b_2 \in \partial A_i$, also with $f(a_2) < f(b_2)$.
+%Note that the 'other side' exists only because $\Omega = \mathbb R^2$ and thus $\partial A_i$ is a line.
 
 Since $A$ is a slope region, $a_1$ and $a_2$, as well as $b_1$ and $b_2$ have to be connected by a monotonic path.
 Because of the Jordan Curve Theorem \cite{jordan1887cours}, these paths have to cross in a point $c \in A$.
-But this yields a contradiction: $f(c) \leq f(a_2) < min(f(b_1), f(b_2)) \leq f(c)$.
+But this yields a contradiction: $f(c) \leq f(a_2) < f(b_1) \leq f(c)$.
 Thus the assumption of the existence of two local minima has to be false.
-
 \hfill $\Box$
+
+\emph{Note:} The circle assumption is actually unneccesary and the proof without it remains the same in spirit, but becomes inhibitivly technical, which is why we omit it here.
 
 \begin{exmp}
 Let $\Omega = \mathbb R^3$ and $A = B_1(0,0,0)$ be the closed unit ball.
