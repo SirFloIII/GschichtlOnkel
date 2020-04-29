@@ -44,7 +44,8 @@
 
 \author{Florian Bogner\\
 TU Wien\\
-{\tt\small e1225415@student.tuwien.ac.at}
+{\tt\small e1225415@student.tuwien.ac.at}\\
+\small\textit{Co-First Author}\\
 % For a paper whose authors are all at the same institution,
 % omit the following lines up until the closing ``}''.
 % Additional authors and addresses can be added with ``\and'',
@@ -53,7 +54,13 @@ TU Wien\\
 \and
 Alexander Palmrich\\
 TU Wien\\
-{\tt\small apalmrich@gmail.com}
+{\tt\small apalmrich@gmail.com}\\
+\small\textit{Co-First Author}\\
+\and
+Walter G. Kropatsch\\
+TU Wien\\
+{\tt\small krw@prip.tuwien.ac.at}\\
+\small\textit{Supervisory Author}\\
 %\and
 %Walter Kropatsch
 }
@@ -102,7 +109,7 @@ There might be many different coarsest slope decompositions.
 The criterion we used to describe slopes, any two points being connected by either an ascending or a descending path, can easily be used in higher dimensions.
 Think of a computed tomography scan, which will yield gray-scale data, but not just on a 2D image, but rather on a 3D volume.
 We want to partition the 3D volume, such that any two points in a region can be connected via an either ascending or descending path within the region.
-Recall that \emph{ascending} and \emph{descending} refers to the brightness value of the tomography scan as we move in the volume. For piecewise linear functions on a volume, decompositions were introduced in \cite{edelsbrunner2003morse}. 
+Recall that \emph{ascending} and \emph{descending} refers to the intensity value of the tomography scan as we move in the volume. For piecewise linear functions on a volume, decompositions were introduced in \cite{edelsbrunner2003morse}. 
 
 By abstracting from image and tomography to a real function $f: \Omega \rightarrow \mathbb{R}$ defined on some subset of $\mathbb{R}^n$ (think of it as the pixel intensity function), and by rigorously defining a coarsest slope decomposition, we can lift the concept to arbitrary dimensions in a mathematically concise fashion.
 
@@ -223,9 +230,9 @@ Therefore, A is not a slope region.
 Given $x, y \in A$ we have to find a monotonic path $\gamma$.
 Without loss of generality suppose $f(x) \geq f(y)$.
 Since $A$ is path-connected, there exists an (not necessarily monotonic) path $\gamma_0: [a,b] \to A$ from $x$ to $y$.
-Using the Rising Sun lemma \cite{riesz1932theoreme} on the continuous function $f \circ \gamma_0$ we get the \emph{shadow} $S = \bigcup_{i \in I} (a_n, b_n)$ consisting of at most countably many intervals.
+Using the Rising Sun lemma \cite{riesz1932theoreme} on the continuous function $f \circ \gamma_0$ we get the \emph{shadow} $S = \bigcup_{i \in I} (a_i, b_i)$ consisting of at most countably many intervals.
 
-$S$ consists of the points which contradict the monotony of $f \circ \gamma_0$, thus we want to \emph{iron out} these points.
+$S$ consists of the points which contradict the monotonicity of $f \circ \gamma_0$, thus we want to \emph{iron out} these points.
 
 Let $c_n := f(a_n) = f(b_n)$. Since the levelset of $c_n$ is path-connected, we can connect $\gamma_0(a_n)$ and $\gamma_0(b_n)$ with a level path $\gamma_n^* : [a_n, b_n] \to A.$
 
@@ -276,7 +283,7 @@ Since $\partial A_i$ is homeomorphic to a circle, there have to be local maxima 
 %Note that the 'other side' exists only because $\Omega = \mathbb R^2$ and thus $\partial A_i$ is a line.
 
 Since $A$ is a slope region, $a_1$ and $a_2$, as well as $b_1$ and $b_2$ have to be connected by a monotonic path.
-Because of the Jordan Curve Theorem \cite{jordan1887cours}, these paths have to cross in a point $c \in A$.
+Because of the Jordan Curve Theorem \cite[p.169]{hatcher2002algebraic}, these paths have to cross in a point $c \in A$.
 But this yields a contradiction: $f(c) \leq f(a_2) < f(b_1) \leq f(c)$.
 Thus the assumption of the existence of two local minima has to be false.
 \hfill $\Box$
@@ -291,7 +298,7 @@ f: \mathbb R^3 \to \mathbb R: (x,y,z) \mapsto \sqrt{y^2 + z^2}
 \end{equation*}
 The levelsets of $f$ in $A$ are either the $x$-Axis for $f \equiv 0$ or the sides of cylinders for $f > 0$.
 In any case, they are connected.
-Thus, by theorem \ref{slope_iff_conn_lvlsets}, $A$ is a slope region.
+Thus, by Theorem \ref{slope_iff_conn_lvlsets}, $A$ is a slope region.
 $\partial A$ has one connected component, which is the unit sphere.
 $f|_{\partial A}$ has two local minima, which are the intersections with the $x$-Axis, $(1,0,0)$ and $(-1,0,0)$.
 \end{exmp}
@@ -311,7 +318,7 @@ Then, $s \in \partial A$.
 $s$ being a saddle point means there is a neighborhood $V \subset U$ so that $V_- := V \cap [f < f(s)]$ as well as $V_+ := V \cap [f > f(s)]$ decompose into two or more connected components.
 
 Pick $a_1, a_2$ from different components of $V_-$ as well as $b_1, b_2$ from different components of $V_+$.
-$a_1$ and $a_2$ have to be connected by a monotonic path, but this path has to move outside of $V$ since the points are from different components of $V_-$ and by virtue of being monotonic, the path can not go through $V_+$.
+$a_1$ and $a_2$ have to be connected by a monotonic path, but this path has to move outside of $V$ since the points are from different components of $V_-$ and by virtue of being monotonic, the path cannot go through $V_+$.
 Analogue for $b_1$ and $b_2$.
 
 Again by the Jordan Curve Theorem, these two paths have to cross in some point $c$, which again yields a contradiction.
@@ -354,7 +361,7 @@ Now we will work our way to the central insights on which the border propagation
 Let us develop ideas for smooth (hyper-)surfaces first, and deal with discrete variants in the next section.
 
 Slope regions can be constructed and grown in a straight-forward iterative manner by sweeping through the function values from lowest to highest. 
-This is similar to the intuition employed in Morse theory\cite{MatsumotoYukio2002AitM}.
+This is similar to the intuition employed in Morse theory\cite[Section 1.4]{MatsumotoYukio2002AitM}.
 Visualize a smooth, compact 2D surface in 3D space.
 We want to decompose this surface into slope regions.
 Initially, our decomposition is empty, i.e. there are no slope regions (thus we don't have an actual \emph{decomposition} yet).
@@ -589,7 +596,7 @@ Instead we developed a new, levelset-based method of growing regions, which yiel
 %We assume the data to be discretized from a continuous function.
 
 \section{Acknowledgements}
-The BP algorithm as well as this paper are the result of a pattern recognition course held at the \href{https://www.tuwien.at/en/}{Vienna University Of Technology} from Oct 2019 till Jan 2020. Professor \textsc{W. Kropatsch} introduced us to the concept of slope regions and posed the challenge to compute them in high dimensions ($>2$). We wish to thank him as well as \textsc{Darshan Batavia} for their valuable input.
+The BP algorithm as well as this paper are the result of a pattern recognition course held at the \href{https://www.tuwien.at/en/}{Vienna University Of Technology} from Oct 2019 till Jan 2020. Professor \textsc{W. Kropatsch} introduced us to the concept of slope regions and posed the challenge to compute them in high dimensions ($>2$). We wish to thank him as well as \textsc{Darshan Batavia} and the anonymous reviewers for their valuable input.
 
 {\small
 \bibliographystyle{ieee}
